@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -42,7 +43,9 @@ data class MenuItemData(
 @Composable
 fun MainMenuScreen(
     onNavigateToStaffDirectory: () -> Unit,
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    loggedInUserId: String = "KHS1234",
+    onLogout: () -> Unit = {}
 ) {
     val menuItems = listOf(
         MenuItemData(
@@ -135,6 +138,42 @@ fun MainMenuScreen(
                                 color = RailwayAmber
                             )
                         }
+                    }
+                },
+                actions = {
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = Color(0xFF0F2642),
+                        border = BorderStroke(1.dp, Color(0xFF38BDF8).copy(alpha = 0.5f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "User",
+                                tint = Color(0xFF38BDF8),
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = loggedInUserId,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF38BDF8)
+                            )
+                        }
+                    }
+                    IconButton(
+                        onClick = onLogout,
+                        modifier = Modifier.testTag("menu_logout_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = "Logout",
+                            tint = Color(0xFFF87171)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
