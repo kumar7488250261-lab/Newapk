@@ -18,6 +18,7 @@ import com.example.ui.screens.StaffDirectoryScreen
 import com.example.ui.theme.MyApplicationTheme
 
 sealed interface Screen {
+    object Splash : Screen
     object MainMenu : Screen
     object StaffDirectory : Screen
     data class LobbyDetail(val lobby: Lobby) : Screen
@@ -33,18 +34,26 @@ class MainActivity : ComponentActivity() {
                 val repository = remember { StaffRepository(context) }
                 val lobbies = remember { repository.getLobbies() }
 
-                var currentScreen by remember { mutableStateOf<Screen>(Screen.MainMenu) }
+                var currentScreen by remember { mutableStateOf<Screen>(Screen.Splash) }
                 val snackbarHostState = remember { SnackbarHostState() }
 
-                BackHandler(enabled = currentScreen != Screen.MainMenu) {
+                BackHandler(enabled = currentScreen != Screen.MainMenu && currentScreen != Screen.Splash) {
                     currentScreen = when (currentScreen) {
                         is Screen.LobbyDetail -> Screen.StaffDirectory
                         is Screen.StaffDirectory -> Screen.MainMenu
                         Screen.MainMenu -> Screen.MainMenu
+                        Screen.Splash -> Screen.Splash
                     }
                 }
 
                 when (val screen = currentScreen) {
+                    Screen.Splash -> {
+                        com.example.ui.screens.SplashScreen(
+                            onTimeout = {
+                                currentScreen = Screen.MainMenu
+                            }
+                        )
+                    }
                     Screen.MainMenu -> {
                         MainMenuScreen(
                             onNavigateToStaffDirectory = {

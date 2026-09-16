@@ -1,7 +1,9 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,6 +21,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -107,12 +110,12 @@ fun StaffDirectoryScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = RailwayBlue,
+                    containerColor = Color(0xFF081326),
                     titleContentColor = Color.White
                 )
             )
         },
-        containerColor = RailwaySurface
+        containerColor = DarkBackground
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -127,12 +130,12 @@ fun StaffDirectoryScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 12.dp)
                     .testTag("staff_search_input"),
-                placeholder = { Text("Search staff name, number, station...", fontSize = 14.sp) },
+                placeholder = { Text("Search staff name, number, station...", fontSize = 14.sp, color = DarkTextMuted) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
-                        tint = RailwayBlue
+                        tint = RailwayLightBlue
                     )
                 },
                 trailingIcon = {
@@ -141,7 +144,7 @@ fun StaffDirectoryScreen(
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Clear",
-                                tint = RailwayTextSecondary
+                                tint = DarkTextSecondary
                             )
                         }
                     }
@@ -149,10 +152,12 @@ fun StaffDirectoryScreen(
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = RailwayBlue,
-                    unfocusedBorderColor = RailwayDivider,
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+                    focusedBorderColor = RailwayLightBlue,
+                    unfocusedBorderColor = DarkCardBorder,
+                    focusedContainerColor = DarkSurface,
+                    unfocusedContainerColor = DarkSurface,
+                    focusedTextColor = DarkTextPrimary,
+                    unfocusedTextColor = DarkTextPrimary
                 )
             )
 
@@ -219,19 +224,19 @@ fun StaffDirectoryScreen(
                     }
                 }
             } else {
-                // Showing lobby tiles list (Screenshots 4 & 5)
+                // Showing lobby tiles list
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     item {
                         Text(
                             text = "SELECT STATION / LOBBY",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = RailwayTextSecondary,
-                            letterSpacing = 1.sp,
+                            color = DarkTextMuted,
+                            letterSpacing = 1.2.sp,
                             modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
                         )
                     }
@@ -259,6 +264,24 @@ fun LobbyTileCard(
 ) {
     val isKharsia = lobby.id == "kharsia" || lobby.code == "KHS"
 
+    val stationBadgeColor = when (lobby.code.uppercase()) {
+        "KHS" -> Color(0xFF10B981)
+        "BSP" -> Color(0xFF3B82F6)
+        "CPH" -> Color(0xFF8B5CF6)
+        "KRBA" -> Color(0xFFF97316)
+        "RIG" -> Color(0xFF06B6D4)
+        "SDL" -> Color(0xFFEC4899)
+        "APR" -> Color(0xFF14B8A6)
+        "MDGR" -> Color(0xFFEAB308)
+        "BPHB" -> Color(0xFF6366F1)
+        "BYT" -> Color(0xFF10B981)
+        "USL" -> Color(0xFF38BDF8)
+        "PND" -> Color(0xFFA855F7)
+        "BRJN" -> Color(0xFFF43F5E)
+        "BJRI" -> Color(0xFF22C55E)
+        else -> Color(0xFF3B82F6)
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -266,18 +289,20 @@ fun LobbyTileCard(
             .testTag("lobby_card_${lobby.code.lowercase()}"),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isKharsia) Color(0xFFF0FDF4) else Color.White
+            containerColor = if (isKharsia) Color(0xFF08221B) else DarkSurface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isKharsia) 4.dp else 1.dp),
         border = if (isKharsia) {
-            CardDefaults.outlinedCardBorder().copy(
-                width = 2.dp,
-                brush = androidx.compose.ui.graphics.SolidColor(RailwaySuccess)
+            BorderStroke(
+                1.5.dp,
+                Brush.horizontalGradient(
+                    listOf(Color(0xFF10B981), Color(0xFF06B6D4))
+                )
             )
         } else {
-            CardDefaults.outlinedCardBorder().copy(
-                width = 1.dp,
-                brush = androidx.compose.ui.graphics.SolidColor(RailwayDivider)
+            BorderStroke(
+                1.dp,
+                DarkCardBorder
             )
         }
     ) {
@@ -304,12 +329,17 @@ fun LobbyTileCard(
                         modifier = Modifier
                             .size(44.dp)
                             .clip(CircleShape)
-                            .background(RailwayBlue),
+                            .background(stationBadgeColor.copy(alpha = 0.2f))
+                            .border(
+                                1.5.dp,
+                                stationBadgeColor.copy(alpha = 0.8f),
+                                CircleShape
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = if (lobby.code.length > 4) lobby.code.take(3) else lobby.code,
-                            color = Color.White,
+                            color = stationBadgeColor,
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 12.sp
                         )
@@ -324,19 +354,20 @@ fun LobbyTileCard(
                             text = lobby.name,
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
-                            color = RailwayNavy
+                            color = DarkTextPrimary
                         )
                         if (isKharsia) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
-                                color = RailwaySuccess
+                                color = Color(0xFF064E3B),
+                                border = BorderStroke(1.dp, Color(0xFF10B981))
                             ) {
                                 Text(
                                     text = "HOME LOBBY",
                                     fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color(0xFF34D399),
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                             }
@@ -346,14 +377,14 @@ fun LobbyTileCard(
                     Text(
                         text = "${lobby.totalContacts} Staff Registered",
                         fontSize = 12.sp,
-                        color = RailwayTextSecondary
+                        color = if (isKharsia) Color(0xFF34D399) else DarkTextSecondary
                     )
                 }
 
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = "Open",
-                    tint = if (isKharsia) RailwaySuccess else RailwayTextSecondary,
+                    tint = if (isKharsia) Color(0xFF34D399) else DarkTextMuted,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -368,12 +399,13 @@ fun LobbyTileCard(
                 items(lobby.categories) { cat ->
                     Surface(
                         shape = RoundedCornerShape(6.dp),
-                        color = Color(0xFFF1F5F9)
+                        color = if (isKharsia) Color(0xFF0D3328) else DarkSurfaceElevated,
+                        border = BorderStroke(0.5.dp, DarkCardBorder)
                     ) {
                         Text(
                             text = "${cat.name} (${cat.contacts.size})",
                             fontSize = 11.sp,
-                            color = RailwayTextSecondary,
+                            color = if (isKharsia) Color(0xFF6EE7B7) else DarkTextSecondary,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
@@ -396,12 +428,9 @@ fun StaffContactCard(
             .fillMaxWidth()
             .testTag("staff_card_${contact.name.replace(" ", "_")}"),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
-        border = CardDefaults.outlinedCardBorder().copy(
-            width = 1.dp,
-            brush = androidx.compose.ui.graphics.SolidColor(RailwayDivider)
-        )
+        colors = CardDefaults.cardColors(containerColor = DarkSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, DarkCardBorder)
     ) {
         Row(
             modifier = Modifier
@@ -415,7 +444,7 @@ fun StaffContactCard(
                         text = contact.name,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
-                        color = RailwayNavy
+                        color = DarkTextPrimary
                     )
                 }
 
@@ -427,17 +456,18 @@ fun StaffContactCard(
                 ) {
                     // Category Badge
                     val badgeColor = when (contact.category.uppercase()) {
-                        "LPG", "LP" -> Color(0xFF2563EB)
-                        "ALP" -> Color(0xFF0D9488)
-                        "TM", "GUARD" -> Color(0xFF7C3AED)
-                        "CLI" -> Color(0xFFD97706)
-                        "TLC" -> Color(0xFFDC2626)
-                        "STATION" -> Color(0xFF059669)
-                        else -> RailwayBlue
+                        "LPG", "LP" -> Color(0xFF38BDF8)
+                        "ALP" -> Color(0xFF2DD4BF)
+                        "TM", "GUARD" -> Color(0xFFA855F7)
+                        "CLI" -> Color(0xFFFBBF24)
+                        "TLC" -> Color(0xFFFB7185)
+                        "STATION" -> Color(0xFF34D399)
+                        else -> RailwayLightBlue
                     }
                     Surface(
                         shape = RoundedCornerShape(4.dp),
-                        color = badgeColor.copy(alpha = 0.12f)
+                        color = badgeColor.copy(alpha = 0.15f),
+                        border = BorderStroke(0.5.dp, badgeColor.copy(alpha = 0.4f))
                     ) {
                         Text(
                             text = contact.category,
@@ -451,13 +481,14 @@ fun StaffContactCard(
                     // Lobby Badge
                     Surface(
                         shape = RoundedCornerShape(4.dp),
-                        color = Color(0xFFF1F5F9)
+                        color = DarkSurfaceElevated,
+                        border = BorderStroke(0.5.dp, DarkCardBorder)
                     ) {
                         Text(
                             text = contact.lobbyCode,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = RailwayTextSecondary,
+                            color = DarkTextSecondary,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
@@ -469,7 +500,7 @@ fun StaffContactCard(
                     Icon(
                         imageVector = Icons.Default.Phone,
                         contentDescription = "Phone",
-                        tint = RailwayTextSecondary,
+                        tint = DarkTextMuted,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -477,26 +508,42 @@ fun StaffContactCard(
                         text = contact.mobile,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = RailwayNavy,
+                        color = Color(0xFFE2E8F0),
                         letterSpacing = 0.5.sp
                     )
                 }
             }
 
             // Action Buttons
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 // Copy Button
                 IconButton(
                     onClick = onCopy,
                     modifier = Modifier
                         .size(38.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFF1F5F9))
+                        .background(DarkSurfaceElevated)
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.ContentCopy,
                         contentDescription = "Copy number",
-                        tint = RailwayTextSecondary,
+                        tint = DarkTextSecondary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                // WhatsApp Button
+                IconButton(
+                    onClick = onWhatsApp,
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(ActionWhatsAppGreen)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Chat,
+                        contentDescription = "WhatsApp",
+                        tint = Color.White,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -507,7 +554,7 @@ fun StaffContactCard(
                     modifier = Modifier
                         .size(38.dp)
                         .clip(CircleShape)
-                        .background(RailwaySuccess)
+                        .background(ActionCallGreen)
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Call,

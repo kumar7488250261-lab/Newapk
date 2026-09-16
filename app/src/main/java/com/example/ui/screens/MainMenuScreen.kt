@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,7 +22,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
@@ -33,7 +33,9 @@ data class MenuItemData(
     val icon: ImageVector,
     val isEnabled: Boolean,
     val statusText: String,
-    val tag: String
+    val tag: String,
+    val accentColor: Color,
+    val darkContainerColor: Color
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,9 +44,6 @@ fun MainMenuScreen(
     onNavigateToStaffDirectory: () -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
-    var showWelcomeDialog by remember { mutableStateOf(true) }
-    val scope = rememberCoroutineScope()
-
     val menuItems = listOf(
         MenuItemData(
             title = "Staff Directory",
@@ -52,7 +51,9 @@ fun MainMenuScreen(
             icon = Icons.Filled.ContactPhone,
             isEnabled = true,
             statusText = "Available",
-            tag = "menu_staff_directory"
+            tag = "menu_staff_directory",
+            accentColor = ModuleStaffGreen,
+            darkContainerColor = ModuleStaffGreenDark
         ),
         MenuItemData(
             title = "Long hour update",
@@ -60,7 +61,9 @@ fun MainMenuScreen(
             icon = Icons.Outlined.HourglassEmpty,
             isEnabled = false,
             statusText = "Coming Soon",
-            tag = "menu_long_hour"
+            tag = "menu_long_hour",
+            accentColor = ModuleLongHourAmber,
+            darkContainerColor = ModuleLongHourDark
         ),
         MenuItemData(
             title = "Store register",
@@ -68,7 +71,9 @@ fun MainMenuScreen(
             icon = Icons.Outlined.Inventory2,
             isEnabled = false,
             statusText = "Coming Soon",
-            tag = "menu_store_register"
+            tag = "menu_store_register",
+            accentColor = ModuleStorePurple,
+            darkContainerColor = ModuleStoreDark
         ),
         MenuItemData(
             title = "Roaster &TLC update",
@@ -76,7 +81,9 @@ fun MainMenuScreen(
             icon = Icons.Outlined.EventNote,
             isEnabled = false,
             statusText = "Coming Soon",
-            tag = "menu_roaster_tlc"
+            tag = "menu_roaster_tlc",
+            accentColor = ModuleRosterBlue,
+            darkContainerColor = ModuleRosterDark
         ),
         MenuItemData(
             title = "Jeep movement",
@@ -84,7 +91,9 @@ fun MainMenuScreen(
             icon = Icons.Outlined.DirectionsCar,
             isEnabled = false,
             statusText = "Coming Soon",
-            tag = "menu_jeep_movement"
+            tag = "menu_jeep_movement",
+            accentColor = ModuleJeepRose,
+            darkContainerColor = ModuleJeepDark
         ),
         MenuItemData(
             title = "Pdd &pad",
@@ -92,66 +101,11 @@ fun MainMenuScreen(
             icon = Icons.Outlined.Train,
             isEnabled = false,
             statusText = "Coming Soon",
-            tag = "menu_pdd_pad"
+            tag = "menu_pdd_pad",
+            accentColor = ModulePddTeal,
+            darkContainerColor = ModulePddDark
         )
     )
-
-    // Welcome Dialog on first opening as requested
-    if (showWelcomeDialog) {
-        AlertDialog(
-            onDismissRequest = { showWelcomeDialog = false },
-            confirmButton = {
-                Button(
-                    onClick = { showWelcomeDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = RailwayBlue),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("welcome_continue_btn")
-                ) {
-                    Text("Continue to Portal", fontWeight = FontWeight.Bold)
-                }
-            },
-            icon = {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_kharsia_logo),
-                    contentDescription = "Kharsia Lobby Logo",
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                )
-            },
-            title = {
-                Text(
-                    text = "Welcome to KHS LOBBY",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    color = RailwayNavy,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            text = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Kharsia Lobby • SECR Bilaspur Division",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp,
-                        color = RailwayGold,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Welcome to Kharsia Lobby Crew Management & Staff Directory Portal. Only the Staff Directory is currently active for all crew calling & contact lookup.",
-                        fontSize = 13.sp,
-                        color = RailwayTextSecondary,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            },
-            containerColor = Color.White,
-            shape = RoundedCornerShape(20.dp)
-        )
-    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -163,32 +117,33 @@ fun MainMenuScreen(
                             painter = painterResource(id = R.drawable.ic_kharsia_logo),
                             contentDescription = "Kharsia Lobby Logo",
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(40.dp)
                                 .clip(CircleShape)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
                                 text = "KHARSIA LOBBY",
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.ExtraBold,
                                 fontSize = 18.sp,
                                 color = Color.White
                             )
                             Text(
                                 text = "SECR • Bilaspur Division",
                                 fontSize = 11.sp,
-                                color = Color(0xFFCBD5E1)
+                                fontWeight = FontWeight.SemiBold,
+                                color = RailwayAmber
                             )
                         }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = RailwayBlue,
+                    containerColor = Color(0xFF081326),
                     titleContentColor = Color.White
                 )
             )
         },
-        containerColor = RailwaySurface
+        containerColor = DarkBackground
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -199,23 +154,29 @@ fun MainMenuScreen(
         ) {
             item {
                 Spacer(modifier = Modifier.height(8.dp))
-                // Welcome Banner Card
+                // Welcome Banner Card in vibrant dark style
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("welcome_banner_card"),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                    border = BorderStroke(
+                        1.dp,
+                        Brush.horizontalGradient(
+                            listOf(Color(0xFF38BDF8).copy(alpha = 0.4f), Color(0xFFF59E0B).copy(alpha = 0.4f))
+                        )
+                    )
                 ) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(
                                 Brush.horizontalGradient(
-                                    colors = listOf(RailwayNavy, RailwayBlue)
+                                    colors = listOf(Color(0xFF0A182F), Color(0xFF132B4F))
                                 )
                             )
-                            .padding(20.dp)
+                            .padding(18.dp)
                     ) {
                         Column {
                             Row(
@@ -226,7 +187,7 @@ fun MainMenuScreen(
                                     painter = painterResource(id = R.drawable.ic_kharsia_logo),
                                     contentDescription = "Kharsia Lobby Logo",
                                     modifier = Modifier
-                                        .size(52.dp)
+                                        .size(54.dp)
                                         .clip(CircleShape)
                                 )
                                 Spacer(modifier = Modifier.width(14.dp))
@@ -238,19 +199,19 @@ fun MainMenuScreen(
                                     ) {
                                         Text(
                                             text = "Welcome to KHS LOBBY",
-                                            fontSize = 18.sp,
+                                            fontSize = 17.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color.White
                                         )
                                         Surface(
                                             color = RailwayAmber,
-                                            shape = RoundedCornerShape(8.dp)
+                                            shape = RoundedCornerShape(6.dp)
                                         ) {
                                             Text(
                                                 text = "KHS",
                                                 fontWeight = FontWeight.ExtraBold,
                                                 fontSize = 11.sp,
-                                                color = RailwayNavy,
+                                                color = Color(0xFF070E1B),
                                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                             )
                                         }
@@ -259,7 +220,7 @@ fun MainMenuScreen(
                                     Text(
                                         text = "Crew Management & Operational Portal. Access staff directory, call book numbers and department contacts.",
                                         fontSize = 12.sp,
-                                        color = Color(0xFFE2E8F0),
+                                        color = Color(0xFFCBD5E1),
                                         lineHeight = 16.sp
                                     )
                                 }
@@ -271,11 +232,11 @@ fun MainMenuScreen(
 
             item {
                 Text(
-                    text = "MAIN MENU",
+                    text = "OPERATIONAL MODULES",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    color = RailwayTextSecondary,
-                    letterSpacing = 1.sp,
+                    color = Color(0xFF64748B),
+                    letterSpacing = 1.2.sp,
                     modifier = Modifier.padding(start = 4.dp, top = 4.dp)
                 )
             }
@@ -294,33 +255,7 @@ fun MainMenuScreen(
             }
 
             item {
-                Spacer(modifier = Modifier.height(16.dp))
-                // Footer notice
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF3C7))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = "Notice",
-                            tint = RailwayGold,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "As per lobby notice, only Staff Directory is functional. All other modules are coming soon.",
-                            fontSize = 12.sp,
-                            color = Color(0xFF92400E),
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
             }
         }
     }
@@ -346,20 +281,22 @@ fun MenuCard(
             ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isClickable) Color.White else RailwayDisabledBg
+            containerColor = if (isClickable) Color(0xFF0F1E33) else Color(0xFF0C1626)
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isClickable) 3.dp else 0.dp
+            defaultElevation = if (isClickable) 4.dp else 0.dp
         ),
         border = if (isClickable) {
-            CardDefaults.outlinedCardBorder().copy(
-                width = 1.5.dp,
-                brush = Brush.horizontalGradient(listOf(RailwayBlue, RailwayLightBlue))
+            BorderStroke(
+                1.5.dp,
+                Brush.horizontalGradient(
+                    listOf(Color(0xFF10B981), Color(0xFF06B6D4))
+                )
             )
         } else {
-            CardDefaults.outlinedCardBorder().copy(
-                width = 1.dp,
-                brush = Brush.horizontalGradient(listOf(RailwayDivider, RailwayDivider))
+            BorderStroke(
+                1.dp,
+                item.accentColor.copy(alpha = 0.22f)
             )
         }
     ) {
@@ -369,20 +306,24 @@ fun MenuCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon container
+            // Colorful Icon container
             Box(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(
-                        if (isClickable) Color(0xFFEFF6FF) else Color(0xFFE2E8F0)
+                        if (isClickable) {
+                            Color(0xFF064E3B)
+                        } else {
+                            item.darkContainerColor.copy(alpha = 0.6f)
+                        }
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = item.icon,
                     contentDescription = item.title,
-                    tint = if (isClickable) RailwayBlue else RailwayDisabled,
+                    tint = if (isClickable) Color(0xFF34D399) else item.accentColor,
                     modifier = Modifier.size(26.dp)
                 )
             }
@@ -395,13 +336,13 @@ fun MenuCard(
                     text = item.title,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    color = if (isClickable) RailwayNavy else RailwayDisabled
+                    color = if (isClickable) Color(0xFFF8FAFC) else Color(0xFFE2E8F0)
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = item.subtitle,
                     fontSize = 12.sp,
-                    color = if (isClickable) RailwayTextSecondary else RailwayDisabled,
+                    color = if (isClickable) Color(0xFF94A3B8) else Color(0xFF64748B),
                     lineHeight = 16.sp
                 )
             }
@@ -412,23 +353,24 @@ fun MenuCard(
             if (isClickable) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = Color(0xFFDCFCE7)
+                    color = Color(0xFF064E3B),
+                    border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.6f))
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Open",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = RailwaySuccess
+                            text = "ACTIVE",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF34D399)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(
                             imageVector = Icons.Default.ChevronRight,
                             contentDescription = "Open",
-                            tint = RailwaySuccess,
+                            tint = Color(0xFF34D399),
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -436,13 +378,14 @@ fun MenuCard(
             } else {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = Color(0xFFFEE2E2)
+                    color = item.accentColor.copy(alpha = 0.12f),
+                    border = BorderStroke(1.dp, item.accentColor.copy(alpha = 0.3f))
                 ) {
                     Text(
                         text = "Coming Soon",
-                        fontSize = 11.sp,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = RailwayDanger,
+                        color = item.accentColor,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }

@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -75,7 +76,7 @@ fun LobbyDetailScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = lobby.name,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.ExtraBold,
                                 fontSize = 18.sp,
                                 color = Color.White
                             )
@@ -87,8 +88,8 @@ fun LobbyDetailScreen(
                                 Text(
                                     text = lobby.code,
                                     fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = RailwayNavy,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color(0xFF070E1B),
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                             }
@@ -96,7 +97,8 @@ fun LobbyDetailScreen(
                         Text(
                             text = "${lobby.totalContacts} Staff Registered",
                             fontSize = 11.sp,
-                            color = Color(0xFFCBD5E1)
+                            fontWeight = FontWeight.SemiBold,
+                            color = RailwayAmber
                         )
                     }
                 },
@@ -125,12 +127,12 @@ fun LobbyDetailScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = RailwayBlue,
+                    containerColor = Color(0xFF081326),
                     titleContentColor = Color.White
                 )
             )
         },
-        containerColor = RailwaySurface
+        containerColor = DarkBackground
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -145,12 +147,12 @@ fun LobbyDetailScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 10.dp)
                     .testTag("lobby_search_input"),
-                placeholder = { Text("Search by name or number in ${lobby.code}...", fontSize = 14.sp) },
+                placeholder = { Text("Search by name or number in ${lobby.code}...", fontSize = 14.sp, color = DarkTextMuted) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
-                        tint = RailwayBlue
+                        tint = RailwayLightBlue
                     )
                 },
                 trailingIcon = {
@@ -159,7 +161,7 @@ fun LobbyDetailScreen(
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Clear",
-                                tint = RailwayTextSecondary
+                                tint = DarkTextSecondary
                             )
                         }
                     }
@@ -167,10 +169,12 @@ fun LobbyDetailScreen(
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = RailwayBlue,
-                    unfocusedBorderColor = RailwayDivider,
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+                    focusedBorderColor = RailwayLightBlue,
+                    unfocusedBorderColor = DarkCardBorder,
+                    focusedContainerColor = DarkSurface,
+                    unfocusedContainerColor = DarkSurface,
+                    focusedTextColor = DarkTextPrimary,
+                    unfocusedTextColor = DarkTextPrimary
                 )
             )
 
@@ -191,10 +195,10 @@ fun LobbyDetailScreen(
 
                     Surface(
                         shape = RoundedCornerShape(20.dp),
-                        color = if (isSelected) RailwayBlue else Color.White,
-                        border = if (isSelected) null else CardDefaults.outlinedCardBorder().copy(
-                            width = 1.dp,
-                            brush = androidx.compose.ui.graphics.SolidColor(RailwayDivider)
+                        color = if (isSelected) Color(0xFF1E3A8A) else DarkSurface,
+                        border = BorderStroke(
+                            1.dp,
+                            if (isSelected) Color(0xFF38BDF8) else DarkCardBorder
                         ),
                         modifier = Modifier
                             .clickable { selectedCategory = catName }
@@ -208,18 +212,18 @@ fun LobbyDetailScreen(
                                 text = catName,
                                 fontSize = 13.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) Color.White else RailwayTextPrimary
+                                color = if (isSelected) Color.White else DarkTextSecondary
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Surface(
                                 shape = CircleShape,
-                                color = if (isSelected) Color.White.copy(alpha = 0.25f) else Color(0xFFE2E8F0)
+                                color = if (isSelected) Color(0xFF38BDF8).copy(alpha = 0.25f) else DarkSurfaceElevated
                             ) {
                                 Text(
                                     text = count.toString(),
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) Color.White else RailwayTextSecondary,
+                                    color = if (isSelected) Color(0xFF38BDF8) else DarkTextMuted,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                             }
@@ -242,14 +246,14 @@ fun LobbyDetailScreen(
                     text = "Showing ${filteredContacts.size} staff",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = RailwayTextSecondary
+                    color = DarkTextSecondary
                 )
                 if (selectedCategory != "ALL") {
                     Text(
                         text = "Category: $selectedCategory",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = RailwayBlue
+                        color = RailwayLightBlue
                     )
                 }
             }
@@ -267,14 +271,14 @@ fun LobbyDetailScreen(
                             imageVector = Icons.Default.PersonOff,
                             contentDescription = "No staff",
                             modifier = Modifier.size(54.dp),
-                            tint = RailwayDisabled
+                            tint = DarkTextMuted
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = "No staff found",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Medium,
-                            color = RailwayTextSecondary
+                            color = DarkTextSecondary
                         )
                     }
                 }
