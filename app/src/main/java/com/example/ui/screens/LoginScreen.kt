@@ -97,15 +97,23 @@ fun LoginScreen(
         },
         containerColor = Color(0xFF070E17) // Dark theme background
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFF070E17))
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
         ) {
+            com.example.ui.components.KharsiaOfficeBuildingBackground(
+                modifier = Modifier.fillMaxSize(),
+                dimOverlayAlpha = 0.72f
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
             // Circular Railway Emblem
             KharsiaLobbyEmblem(
                 modifier = Modifier.padding(bottom = 16.dp),
@@ -359,4 +367,5 @@ fun LoginScreen(
             }
         }
     }
+}
 }

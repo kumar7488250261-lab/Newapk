@@ -29,16 +29,11 @@ fun LobbyLandingScreen(
     onNavigateToGuestDirectory: () -> Unit
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF070E17)) // Deep Dark Navy background
+        modifier = Modifier.fillMaxSize()
     ) {
-        // Station Building Background Illustration
-        StationBuildingIllustration(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.60f)
-                .align(Alignment.TopCenter)
+        com.example.ui.components.KharsiaOfficeBuildingBackground(
+            modifier = Modifier.fillMaxSize(),
+            dimOverlayAlpha = 0.58f
         )
 
         // Top Badge: "INDIAN RAILWAYS • SECR BILASPUR"

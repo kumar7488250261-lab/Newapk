@@ -32,6 +32,7 @@ fun MainMenuScreen(
     onNavigateToStaffDirectory: () -> Unit,
     onNavigateToEquipmentRegister: () -> Unit,
     onNavigateToPeriodicalRest: () -> Unit,
+    onNavigateToLongHour: () -> Unit,
     snackbarHostState: SnackbarHostState,
     loggedInUserId: String = "KHS1234",
     onLogout: () -> Unit = {}
@@ -74,8 +75,8 @@ fun MainMenuScreen(
                 title = "Long hour update",
                 subtitle = "Crew duty hours & overtime monitoring",
                 icon = Icons.Default.HourglassEmpty,
-                isEnabled = false,
-                statusBadge = "Coming Soon",
+                isEnabled = true,
+                statusBadge = "ACTIVE >",
                 testTag = "menu_long_hour",
                 iconTint = Color(0xFFFFB74D),
                 iconBgColor = Color(0xFF3D260D)
@@ -122,15 +123,15 @@ fun MainMenuScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = "KHARSIA LOBBY",
+                                text = "WELCOME TO KHARSIA LOBBY",
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.ExtraBold,
                                     color = Color.White,
-                                    letterSpacing = 1.sp
+                                    letterSpacing = 0.8.sp
                                 )
                             )
                             Text(
-                                text = "SECR • Bilaspur Division",
+                                text = "SECR • Bilaspur Division • Indian Railways",
                                 style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFFF1B748))
                             )
                         }
@@ -206,6 +207,7 @@ fun MainMenuScreen(
                             "menu_staff_directory" -> onNavigateToStaffDirectory()
                             "menu_periodical_rest" -> onNavigateToPeriodicalRest()
                             "menu_store_register" -> onNavigateToEquipmentRegister()
+                            "menu_long_hour" -> onNavigateToLongHour()
                             else -> {
                                 coroutineScope.launch {
                                     snackbarHostState.showSnackbar("${item.title} सुविधा शीघ्र उपलब्ध होगी")

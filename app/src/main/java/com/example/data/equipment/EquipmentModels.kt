@@ -60,3 +60,31 @@ data class PrRequest(
     val reviewedBy: String? = null,
     val reviewedAt: String? = null
 )
+
+@Entity(tableName = "long_hour_records")
+data class LongHourDutyRecord(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val lpgId: String,
+    val lpgName: String,
+    val alpId: String,
+    val alpName: String,
+    val trainNo: String,
+    val locoNo: String,
+    val signOnDate: String,      // e.g. "17-09-2026"
+    val signOnTime: String,      // e.g. "08:30"
+    val direction: String,       // "UP", "DN", "CIC"
+    val currentStationCode: String,
+    val arrivalTimeCurrentStation: String,
+    val currentTrainPosition: String, // 1 to 7
+    val positionTiming: String,
+    val isClosed: Boolean = false, // Active duty until admin closes
+    val reliefDate: String? = null,
+    val reliefTime: String? = null,
+    val reliefStationCode: String? = null,
+    val closedBy: String? = null,
+    val closedAt: String? = null,
+    val createdAt: String = "",
+    val isSyncedToSheets: Boolean = false
+)
+

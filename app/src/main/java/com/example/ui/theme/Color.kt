@@ -11,6 +11,12 @@ val RailwayGold = Color(0xFFFFD700)
 val RailwayRed = Color(0xFFE74C3C)
 val RailwayGreen = Color(0xFF27AE60)
 
+// Dark Theme Surfaces and Accents
+val DarkCanvasBg = Color(0xFF070E17)
+val DarkBackgroundNavy = Color(0xFF0C1929)
+val DarkSurfaceNavy = Color(0xFF10233A)
+val DarkBorderBlue = Color(0xFF1B3654)
+
 val LightBackground = Color(0xFFF8FAFC)
 val LightSurface = Color(0xFFF1F5F9)
 val CardBorder = Color(0xFFE2E8F0)

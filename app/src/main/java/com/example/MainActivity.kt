@@ -20,6 +20,7 @@ import com.example.data.equipment.InChargeAuthManager
 import com.example.ui.screens.*
 import com.example.ui.screens.equipment.*
 import com.example.ui.screens.pr.PeriodicalRestScreen
+import com.example.ui.screens.longhour.LongHourUpdateScreen
 import com.example.ui.theme.KharsiaLobbyTheme
 
 sealed class Screen {
@@ -34,6 +35,7 @@ sealed class Screen {
     object FastReturn : Screen()
     object SupervisorDashboard : Screen()
     object PeriodicalRest : Screen()
+    object LongHour : Screen()
 }
 
 class MainActivity : ComponentActivity() {
@@ -98,6 +100,7 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToStaffDirectory = { currentScreen = Screen.StaffDirectory },
                                 onNavigateToEquipmentRegister = { currentScreen = Screen.EquipmentRegisterHome },
                                 onNavigateToPeriodicalRest = { currentScreen = Screen.PeriodicalRest },
+                                onNavigateToLongHour = { currentScreen = Screen.LongHour },
                                 snackbarHostState = snackbarHostState,
                                 loggedInUserId = loggedInUserId,
                                 onLogout = {
@@ -158,6 +161,13 @@ class MainActivity : ComponentActivity() {
 
                         is Screen.PeriodicalRest -> {
                             PeriodicalRestScreen(
+                                viewModel = equipmentViewModel,
+                                onBack = { currentScreen = Screen.MainMenu }
+                            )
+                        }
+
+                        is Screen.LongHour -> {
+                            LongHourUpdateScreen(
                                 viewModel = equipmentViewModel,
                                 onBack = { currentScreen = Screen.MainMenu }
                             )

@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import com.example.ui.components.KharsiaLobbyEmblem
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,19 +58,7 @@ fun SplashScreen(
                 .scale(scale.value)
                 .alpha(alpha.value)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(96.dp)
-                    .background(Color.White.copy(alpha = 0.1f), shape = CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Train,
-                    contentDescription = null,
-                    tint = RailwayAmber,
-                    modifier = Modifier.size(56.dp)
-                )
-            }
+            KharsiaLobbyEmblem(size = 110.dp)
 
             Spacer(modifier = Modifier.height(24.dp))
 
