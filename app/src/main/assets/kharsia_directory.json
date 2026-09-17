@@ -1,0 +1,355 @@
+{
+  "lobbies": [
+    {
+      "id": 1,
+      "code": "KHS",
+      "name": "Kharsia Combined Lobby",
+      "categories": [
+        {
+          "category": "Lobby In-Charge & Supervisors",
+          "contacts": [
+            {
+              "name": "Shri R. K. Sharma",
+              "designation": "CLI / In-Charge",
+              "mobile": "9752876001",
+              "cug": "9752876001"
+            },
+            {
+              "name": "Shri S. P. Verma",
+              "designation": "CCOR (Lobby)",
+              "mobile": "9752876002",
+              "cug": "9752876002"
+            },
+            {
+              "name": "Shri A. K. Patel",
+              "designation": "TLC / Controller",
+              "mobile": "9752876003",
+              "cug": "9752876003"
+            }
+          ]
+        },
+        {
+          "category": "Loco Pilots (Mail/Express/Goods)",
+          "contacts": [
+            {
+              "name": "Shri D. K. Sahu",
+              "designation": "Loco Pilot (Goods)",
+              "mobile": "9752876101",
+              "cug": "9752876101"
+            },
+            {
+              "name": "Shri Rajesh Kumar",
+              "designation": "Loco Pilot (Goods)",
+              "mobile": "9752876102",
+              "cug": "9752876102"
+            },
+            {
+              "name": "Shri Manoj Singh",
+              "designation": "Loco Pilot (Passenger)",
+              "mobile": "9752876103",
+              "cug": "9752876103"
+            },
+            {
+              "name": "Shri Vikram Rathore",
+              "designation": "Loco Pilot (Goods)",
+              "mobile": "9752876104",
+              "cug": "9752876104"
+            },
+            {
+              "name": "Shri Santosh Yadav",
+              "designation": "Loco Pilot (Goods)",
+              "mobile": "9752876105",
+              "cug": "9752876105"
+            }
+          ]
+        },
+        {
+          "category": "Assistant Loco Pilots (ALP)",
+          "contacts": [
+            {
+              "name": "Shri Amit Verma",
+              "designation": "Sr. ALP",
+              "mobile": "9752876201",
+              "cug": "9752876201"
+            },
+            {
+              "name": "Shri Rahul Dewangan",
+              "designation": "ALP",
+              "mobile": "9752876202",
+              "cug": "9752876202"
+            },
+            {
+              "name": "Shri Pradeep Kumar",
+              "designation": "ALP",
+              "mobile": "9752876203",
+              "cug": "9752876203"
+            },
+            {
+              "name": "Shri Nilesh Patel",
+              "designation": "ALP",
+              "mobile": "9752876204",
+              "cug": "9752876204"
+            }
+          ]
+        },
+        {
+          "category": "Train Managers / Guards",
+          "contacts": [
+            {
+              "name": "Shri R. N. Mishra",
+              "designation": "Train Manager (Goods)",
+              "mobile": "9752876301",
+              "cug": "9752876301"
+            },
+            {
+              "name": "Shri O. P. Gupta",
+              "designation": "Train Manager (Goods)",
+              "mobile": "9752876302",
+              "cug": "9752876302"
+            },
+            {
+              "name": "Shri Suresh Das",
+              "designation": "Train Manager (Goods)",
+              "mobile": "9752876303",
+              "cug": "9752876303"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "code": "BSP",
+      "name": "Bilaspur Crew Lobby",
+      "categories": [
+        {
+          "category": "Lobby In-Charge",
+          "contacts": [
+            {
+              "name": "Shri B. K. Rao",
+              "designation": "CCOR In-Charge",
+              "mobile": "9752876010",
+              "cug": "9752876010"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "code": "RIG",
+      "name": "Raigarh Crew Lobby",
+      "categories": [
+        {
+          "category": "Lobby In-Charge",
+          "contacts": [
+            {
+              "name": "Shri M. K. Pandey",
+              "designation": "CCOR In-Charge",
+              "mobile": "9752876020",
+              "cug": "9752876020"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "code": "CPH",
+      "name": "Champa Crew Lobby",
+      "categories": [
+        {
+          "category": "Lobby In-Charge",
+          "contacts": [
+            {
+              "name": "Shri K. L. Netam",
+              "designation": "CCOR In-Charge",
+              "mobile": "9752876030",
+              "cug": "9752876030"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "code": "KRBA",
+      "name": "Korba Crew Lobby",
+      "categories": [
+        {
+          "category": "Lobby In-Charge",
+          "contacts": [
+            {
+              "name": "Shri T. R. Sahu",
+              "designation": "CCOR In-Charge",
+              "mobile": "9752876040",
+              "cug": "9752876040"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "code": "APR",
+      "name": "Anuppur Crew Lobby",
+      "categories": [
+        {
+          "category": "Lobby In-Charge",
+          "contacts": [
+            {
+              "name": "Shri G. P. Sen",
+              "designation": "CCOR In-Charge",
+              "mobile": "9752876050",
+              "cug": "9752876050"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "code": "SDL",
+      "name": "Shahdol Crew Lobby",
+      "categories": [
+        {
+          "category": "Lobby In-Charge",
+          "contacts": [
+            {
+              "name": "Shri V. K. Tiwari",
+              "designation": "CCOR In-Charge",
+              "mobile": "9752876060",
+              "cug": "9752876060"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "code": "BJRI",
+      "name": "Bijuri Crew Lobby",
+      "categories": [
+        {
+          "category": "Lobby In-Charge",
+          "contacts": [
+            {
+              "name": "Shri H. N. Singh",
+              "designation": "CCOR In-Charge",
+              "mobile": "9752876070",
+              "cug": "9752876070"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "code": "BRJN",
+      "name": "Brajrajnagar Crew Lobby",
+      "categories": [
+        {
+          "category": "Lobby In-Charge",
+          "contacts": [
+            {
+              "name": "Shri S. S. Baghel",
+              "designation": "CCOR In-Charge",
+              "mobile": "9752876080",
+              "cug": "9752876080"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "code": "JSG",
+      "name": "Jharsuguda Crew Lobby",
+      "categories": [
+        {
+          "category": "Lobby In-Charge",
+          "contacts": [
+            {
+              "name": "Shri A. B. Roy",
+              "designation": "CCOR In-Charge",
+              "mobile": "9752876090",
+              "cug": "9752876090"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "code": "ROU",
+      "name": "Rourkela Crew Lobby",
+      "categories": [
+        {
+          "category": "Lobby In-Charge",
+          "contacts": [
+            {
+              "name": "Shri P. C. Jena",
+              "designation": "CCOR In-Charge",
+              "mobile": "9752876110",
+              "cug": "9752876110"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "code": "BIA",
+      "name": "Bhilai Crew Lobby",
+      "categories": [
+        {
+          "category": "Lobby In-Charge",
+          "contacts": [
+            {
+              "name": "Shri S. K. Mahapatra",
+              "designation": "CCOR In-Charge",
+              "mobile": "9752876120",
+              "cug": "9752876120"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "code": "R",
+      "name": "Raipur Crew Lobby",
+      "categories": [
+        {
+          "category": "Lobby In-Charge",
+          "contacts": [
+            {
+              "name": "Shri N. K. Thakur",
+              "designation": "CCOR In-Charge",
+              "mobile": "9752876130",
+              "cug": "9752876130"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "code": "DGG",
+      "name": "Dongargarh Crew Lobby",
+      "categories": [
+        {
+          "category": "Lobby In-Charge",
+          "contacts": [
+            {
+              "name": "Shri U. C. Behera",
+              "designation": "CCOR In-Charge",
+              "mobile": "9752876140",
+              "cug": "9752876140"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

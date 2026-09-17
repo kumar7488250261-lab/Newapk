@@ -1,6 +1,6 @@
 {
   "name": "Kharsia Lobby",
-  "description": "Kharsia Lobby SECR crew management portal and staff directory call book",
+  "description": "Railway Lobby Equipment Register, Staff Call Book & Periodical Rest (PR) Management Portal for SECR Bilaspur Division Kharsia Lobby",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
