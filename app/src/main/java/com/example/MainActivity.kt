@@ -71,7 +71,7 @@ class MainActivity : ComponentActivity() {
                                     currentScreen = if (authManager.isLoggedIn) {
                                         Screen.MainMenu
                                     } else {
-                                        Screen.Landing
+                                        Screen.Login
                                     }
                                 }
                             )
@@ -105,7 +105,7 @@ class MainActivity : ComponentActivity() {
                                 loggedInUserId = loggedInUserId,
                                 onLogout = {
                                     authManager.logout()
-                                    currentScreen = Screen.Landing
+                                    currentScreen = Screen.Login
                                 }
                             )
                         }

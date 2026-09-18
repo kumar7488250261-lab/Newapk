@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,9 +32,26 @@ fun LobbyLandingScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        com.example.ui.components.KharsiaOfficeBuildingBackground(
-            modifier = Modifier.fillMaxSize(),
-            dimOverlayAlpha = 0.58f
+        Image(
+            painter = androidx.compose.ui.res.painterResource(id = com.example.R.drawable.bg_kharsia_lobby_building),
+            contentDescription = "Kharsia Lobby Building",
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        // High visibility gradient overlay: clear at top so building and Hindi signboard are prominently visible
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color(0xFF040E1B).copy(alpha = 0.30f),
+                            Color(0xFF040E1B).copy(alpha = 0.82f),
+                            Color(0xFF040E1B).copy(alpha = 0.96f)
+                        )
+                    )
+                )
         )
 
         // Top Badge: "INDIAN RAILWAYS • SECR BILASPUR"
@@ -90,40 +108,48 @@ fun LobbyLandingScreen(
                 ) {
                     Text(
                         text = "WELCOME TO KHARSIA LOBBY",
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
                             color = Color.White,
                             letterSpacing = 1.sp
-                        )
+                        ),
+                        modifier = Modifier.fillMaxWidth()
                     )
 
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
                         text = "संयुक्त चालक एवं परिचालक लॉबी",
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFF1B748) // Golden yellow
-                        )
+                        ),
+                        modifier = Modifier.fillMaxWidth()
                     )
 
                     Spacer(modifier = Modifier.height(2.dp))
 
                     Text(
                         text = "खरसिया",
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
                             color = Color.White
-                        )
+                        ),
+                        modifier = Modifier.fillMaxWidth()
                     )
 
                     Spacer(modifier = Modifier.height(2.dp))
 
                     Text(
                         text = "दक्षिण पूर्व मध्य रेलवे",
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = Color(0xFF90CAF9)
-                        )
+                        ),
+                        modifier = Modifier.fillMaxWidth()
                     )
 
                     Spacer(modifier = Modifier.height(14.dp))
