@@ -33,6 +33,8 @@ fun MainMenuScreen(
     onNavigateToEquipmentRegister: () -> Unit,
     onNavigateToPeriodicalRest: () -> Unit,
     onNavigateToLongHour: () -> Unit,
+    onNavigateToJeepMovement: () -> Unit,
+    onNavigateToRosterTlc: () -> Unit = {},
     snackbarHostState: SnackbarHostState,
     loggedInUserId: String = "KHS1234",
     onLogout: () -> Unit = {}
@@ -83,20 +85,20 @@ fun MainMenuScreen(
             ),
             MenuItemData(
                 title = "Roaster &TLC update",
-                subtitle = "Traction Loco Controller updates & duty rosters",
+                subtitle = "Shift wise roaster & TLC updates, Admin portal entry",
                 icon = Icons.Default.CalendarMonth,
-                isEnabled = false,
-                statusBadge = "Coming Soon",
+                isEnabled = true,
+                statusBadge = "ACTIVE >",
                 testTag = "menu_roaster_tlc",
                 iconTint = Color(0xFF4FC3F7),
                 iconBgColor = Color(0xFF0E324A)
             ),
             MenuItemData(
                 title = "Jeep movement",
-                subtitle = "Crew transport & road vehicle dispatch log",
+                subtitle = "Jeep Availability & Entry (जीप उपलब्धता एवं एंट्री)",
                 icon = Icons.Default.DirectionsCar,
-                isEnabled = false,
-                statusBadge = "Coming Soon",
+                isEnabled = true,
+                statusBadge = "ACTIVE >",
                 testTag = "menu_jeep_movement",
                 iconTint = Color(0xFFFF4081),
                 iconBgColor = Color(0xFF421024)
@@ -208,6 +210,8 @@ fun MainMenuScreen(
                             "menu_periodical_rest" -> onNavigateToPeriodicalRest()
                             "menu_store_register" -> onNavigateToEquipmentRegister()
                             "menu_long_hour" -> onNavigateToLongHour()
+                            "menu_jeep_movement" -> onNavigateToJeepMovement()
+                            "menu_roaster_tlc" -> onNavigateToRosterTlc()
                             else -> {
                                 coroutineScope.launch {
                                     snackbarHostState.showSnackbar("${item.title} सुविधा शीघ्र उपलब्ध होगी")

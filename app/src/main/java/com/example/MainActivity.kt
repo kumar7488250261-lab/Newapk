@@ -21,10 +21,13 @@ import com.example.ui.screens.*
 import com.example.ui.screens.equipment.*
 import com.example.ui.screens.pr.PeriodicalRestScreen
 import com.example.ui.screens.longhour.LongHourUpdateScreen
+import com.example.ui.screens.jeep.*
+import com.example.ui.screens.roster.*
 import com.example.ui.theme.KharsiaLobbyTheme
 
 sealed class Screen {
     object Splash : Screen()
+    object Welcome : Screen()
     object Landing : Screen()
     object Login : Screen()
     object MainMenu : Screen()
@@ -36,6 +39,12 @@ sealed class Screen {
     object SupervisorDashboard : Screen()
     object PeriodicalRest : Screen()
     object LongHour : Screen()
+    object JeepSubMenu : Screen()
+    object JeepAvailability : Screen()
+    object JeepMovementEntry : Screen()
+    object RosterTlcSubMenu : Screen()
+    object ShiftWiseRoster : Screen()
+    object RosterAdminPortal : Screen()
 }
 
 class MainActivity : ComponentActivity() {
@@ -71,9 +80,15 @@ class MainActivity : ComponentActivity() {
                                     currentScreen = if (authManager.isLoggedIn) {
                                         Screen.MainMenu
                                     } else {
-                                        Screen.Login
+                                        Screen.Welcome
                                     }
                                 }
+                            )
+                        }
+
+                        is Screen.Welcome -> {
+                            WelcomeScreen(
+                                onEnterPortal = { currentScreen = Screen.Landing }
                             )
                         }
 
@@ -101,11 +116,13 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToEquipmentRegister = { currentScreen = Screen.EquipmentRegisterHome },
                                 onNavigateToPeriodicalRest = { currentScreen = Screen.PeriodicalRest },
                                 onNavigateToLongHour = { currentScreen = Screen.LongHour },
+                                onNavigateToJeepMovement = { currentScreen = Screen.JeepSubMenu },
+                                onNavigateToRosterTlc = { currentScreen = Screen.RosterTlcSubMenu },
                                 snackbarHostState = snackbarHostState,
                                 loggedInUserId = loggedInUserId,
                                 onLogout = {
                                     authManager.logout()
-                                    currentScreen = Screen.Login
+                                    currentScreen = Screen.Landing
                                 }
                             )
                         }
@@ -170,6 +187,54 @@ class MainActivity : ComponentActivity() {
                             LongHourUpdateScreen(
                                 viewModel = equipmentViewModel,
                                 onBack = { currentScreen = Screen.MainMenu }
+                            )
+                        }
+
+                        is Screen.JeepSubMenu -> {
+                            JeepSubMenuScreen(
+                                viewModel = equipmentViewModel,
+                                onNavigateToAvailability = { currentScreen = Screen.JeepAvailability },
+                                onNavigateToMovementEntry = { currentScreen = Screen.JeepMovementEntry },
+                                onBack = { currentScreen = Screen.MainMenu }
+                            )
+                        }
+
+                        is Screen.JeepAvailability -> {
+                            JeepAvailabilityScreen(
+                                viewModel = equipmentViewModel,
+                                onNavigateToEntry = { currentScreen = Screen.JeepMovementEntry },
+                                onBack = { currentScreen = Screen.JeepSubMenu }
+                            )
+                        }
+
+                        is Screen.JeepMovementEntry -> {
+                            JeepMovementEntryScreen(
+                                viewModel = equipmentViewModel,
+                                onBack = { currentScreen = Screen.JeepSubMenu }
+                            )
+                        }
+
+                        is Screen.RosterTlcSubMenu -> {
+                            RosterTlcSubMenuScreen(
+                                viewModel = equipmentViewModel,
+                                onNavigateToShiftView = { currentScreen = Screen.ShiftWiseRoster },
+                                onNavigateToAdminEntry = { currentScreen = Screen.RosterAdminPortal },
+                                onBack = { currentScreen = Screen.MainMenu }
+                            )
+                        }
+
+                        is Screen.ShiftWiseRoster -> {
+                            ShiftWiseRosterViewScreen(
+                                viewModel = equipmentViewModel,
+                                onNavigateToAdminEntry = { currentScreen = Screen.RosterAdminPortal },
+                                onBack = { currentScreen = Screen.RosterTlcSubMenu }
+                            )
+                        }
+
+                        is Screen.RosterAdminPortal -> {
+                            RosterAdminPortalScreen(
+                                viewModel = equipmentViewModel,
+                                onBack = { currentScreen = Screen.RosterTlcSubMenu }
                             )
                         }
                     }

@@ -18,6 +18,8 @@ class EquipmentRepository(
     private val prDao = database.prDao()
     private val longHourDao = database.longHourDao()
     private val storeDao = database.storeDao()
+    private val jeepDao = database.jeepDao()
+    private val rosterTlcDao = database.rosterTlcDao()
 
     private val moshi = Moshi.Builder()
         .addLast(KotlinJsonAdapterFactory())
@@ -132,6 +134,25 @@ class EquipmentRepository(
             val list = adapter.fromJson(json) ?: emptyList()
             cachedCrewMembers = list
             list
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+    private var cachedStaffContacts: List<com.example.data.StaffContact> = emptyList()
+
+    suspend fun loadDirectoryContacts(): List<com.example.data.StaffContact> = withContext(Dispatchers.IO) {
+        if (cachedStaffContacts.isNotEmpty()) return@withContext cachedStaffContacts
+        try {
+            val json = context.assets.open("kharsia_directory.json").bufferedReader().use { it.readText() }
+            val adapter = moshi.adapter(com.example.data.DirectoryResponse::class.java)
+            val response = adapter.fromJson(json)
+            val allContacts = response?.lobbies?.flatMap { lobby ->
+                lobby.categories.flatMap { cat -> cat.contacts }
+            } ?: emptyList()
+            cachedStaffContacts = allContacts
+            allContacts
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
@@ -267,5 +288,127 @@ class EquipmentRepository(
     suspend fun syncWithGoogleSheets(webhookUrl: String): Boolean = withContext(Dispatchers.IO) {
         // General sheets sync fallback
         true
+    }
+
+    // Jeep Movement Operations
+    val allJeepMovements: Flow<List<JeepMovementRecord>> = jeepDao.getAllMovements()
+
+    suspend fun insertJeepMovement(record: JeepMovementRecord): Long = withContext(Dispatchers.IO) {
+        jeepDao.insertMovement(record)
+    }
+
+    suspend fun deleteJeepMovement(id: Long) = withContext(Dispatchers.IO) {
+        jeepDao.deleteMovement(id)
+    }
+
+    suspend fun syncJeepMovementToSheets(webhookUrl: String, record: JeepMovementRecord): Boolean = withContext(Dispatchers.IO) {
+        if (webhookUrl.isBlank()) return@withContext false
+        try {
+            val payload = JeepMovementSheetPayload(
+                action = "JEEP_MOVEMENT_UPDATE",
+                id = record.id,
+                jeepNo = record.jeepNo,
+                driverName = record.driverName,
+                toTime = record.toTime,
+                fromStation = record.fromStation,
+                departureDate = record.departureDate,
+                departureTime = record.departureTime,
+                toStation = record.toStation,
+                arrivalDate = record.arrivalDate,
+                arrivalTime = record.arrivalTime,
+                reliefTime = record.reliefTime,
+                outwardCrews = record.outwardCrews,
+                returningCrews = record.returningCrews,
+                returningFromStation = record.returningFromStation,
+                returningDepartureDate = record.returningDepartureDate,
+                returningDepartureTime = record.returningDepartureTime,
+                returningToStation = record.returningToStation,
+                returningArrivalDate = record.returningArrivalDate,
+                returningArrivalTime = record.returningArrivalTime,
+                isCompleted = record.isCompleted,
+                timestamp = System.currentTimeMillis().toString()
+            )
+            val response = apiService.syncJeepMovement(webhookUrl, payload)
+            response.isSuccessful
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    suspend fun syncPrRemarkToSheets(webhookUrl: String, request: PrRequest): Boolean = withContext(Dispatchers.IO) {
+        if (webhookUrl.isBlank()) return@withContext false
+        try {
+            val payload = PrRemarkSheetPayload(
+                action = "PR_REMARK_UPDATE",
+                id = request.id,
+                crewId = request.crewId,
+                crewName = request.crewName,
+                designation = request.designation,
+                signOffDate = request.signOffDate,
+                signOffTime = request.signOffTime,
+                requestDate = request.requestDate,
+                status = request.status,
+                remarks = request.remarks,
+                adminId = request.reviewedBy ?: "",
+                reviewedTimestamp = request.reviewedAt ?: "",
+                timestamp = System.currentTimeMillis().toString()
+            )
+            val response = apiService.syncPrRemark(webhookUrl, payload)
+            response.isSuccessful
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    // Roster & TLC Operations
+    val allRosterTlcRecords: Flow<List<RosterTlcRecord>> = rosterTlcDao.getAllRecords()
+
+    suspend fun insertRosterTlcRecord(record: RosterTlcRecord): Long = withContext(Dispatchers.IO) {
+        rosterTlcDao.insertRecord(record)
+    }
+
+    suspend fun deleteRosterTlcRecord(id: Long) = withContext(Dispatchers.IO) {
+        rosterTlcDao.deleteRecord(id)
+    }
+
+    suspend fun syncRosterTlcToSheets(webhookUrl: String, record: RosterTlcRecord): Boolean = withContext(Dispatchers.IO) {
+        if (webhookUrl.isBlank()) return@withContext false
+        try {
+            val payload = RosterTlcSheetPayload(
+                action = "ROSTER_TLC_UPDATE",
+                id = record.id,
+                rosterDate = record.rosterDate,
+                shiftTiming = record.shiftTiming,
+                tfrCrewName = record.tfrCrewName,
+                tfrMobile = record.tfrMobile,
+                lhCrewName = record.lhCrewName,
+                lhMobile = record.lhMobile,
+                diCrewName = record.diCrewName,
+                diMobile = record.diMobile,
+                wdCrewName = record.wdCrewName,
+                wdMobile = record.wdMobile,
+                cmsName = record.cmsName,
+                lobbyCliShift = record.lobbyCliShift,
+                lobbyCliName = record.lobbyCliName,
+                lobbyCliMobile = record.lobbyCliMobile,
+                sanderBoyShift = record.sanderBoyShift,
+                sanderBoyName = record.sanderBoyName,
+                tlcShift = record.tlcShift,
+                tlcMlName = record.tlcMlName,
+                tlcMlMobile = record.tlcMlMobile,
+                tlcLhName = record.tlcLhName,
+                tlcLhMobile = record.tlcLhMobile,
+                remarks = record.remarks,
+                updatedByAdmin = record.updatedByAdmin,
+                timestamp = record.timestamp.toString()
+            )
+            val response = apiService.syncRosterTlc(webhookUrl, payload)
+            response.isSuccessful
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
     }
 }

@@ -47,6 +47,10 @@ class EquipmentViewModel(
     val allShiftRecords = repository.allShiftRecords
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // Roster & TLC records
+    val allRosterTlcRecords = repository.allRosterTlcRecords
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // Store Admin Shift state
     private val _storeAdminMember = MutableStateFlow<CrewMember?>(null)
     val storeAdminMember: StateFlow<CrewMember?> = _storeAdminMember.asStateFlow()
@@ -354,7 +358,14 @@ class EquipmentViewModel(
                 remarks = ""
             )
 
-            repository.insertPrRequest(request)
+            val newId = repository.insertPrRequest(request)
+            val savedRequest = request.copy(id = newId)
+
+            val webhook = _sheetsWebhookUrl.value
+            if (webhook.isNotBlank()) {
+                repository.syncPrRemarkToSheets(webhook, savedRequest)
+            }
+
             _uiMessage.emit("PR अनुरोध सफलतापूर्वक दर्ज किया गया! (Crew ID: ${request.crewId})")
         }
     }
@@ -376,6 +387,21 @@ class EquipmentViewModel(
                 adminId = adminId,
                 timestamp = reviewedAt
             )
+
+            val webhook = _sheetsWebhookUrl.value
+            if (webhook.isNotBlank()) {
+                val current = allPrRequests.value.find { it.id == requestId }
+                if (current != null) {
+                    val updated = current.copy(
+                        status = status,
+                        remarks = remarks,
+                        reviewedBy = adminId,
+                        reviewedAt = reviewedAt
+                    )
+                    repository.syncPrRemarkToSheets(webhook, updated)
+                }
+            }
+
             _uiMessage.emit("PR अनुरोध $status अपडेट किया गया (रिमार्क: $remarks)")
         }
     }
@@ -637,6 +663,187 @@ class EquipmentViewModel(
             } finally {
                 _isSyncing.value = false
             }
+        }
+    }
+
+    // ==================== JEEP MOVEMENT & AVAILABILITY ====================
+    val allCrewMembers: StateFlow<List<CrewMember>> = flow {
+        emit(repository.loadCrewMaster())
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val allDirectoryContacts: StateFlow<List<com.example.data.StaffContact>> = flow {
+        emit(repository.loadDirectoryContacts())
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val allJeepMovements: StateFlow<List<JeepMovementRecord>> = repository.allJeepMovements
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val jeepAvailabilityList: StateFlow<List<JeepAvailabilityItem>> = allJeepMovements
+        .map { movements -> calculateJeepAvailability(movements) }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            calculateJeepAvailability(emptyList())
+        )
+
+    private fun calculateJeepAvailability(movements: List<JeepMovementRecord>): List<JeepAvailabilityItem> {
+        val coreJeeps = listOf("89", "89(ll)", "91", "22", "31", "79", "Breakdown")
+        val availableList = mutableListOf<JeepAvailabilityItem>()
+        val onMovementList = mutableListOf<JeepAvailabilityItem>()
+
+        val sdfDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+        val todayStr = sdfDate.format(Date())
+
+        for (jeepNo in coreJeeps) {
+            val latest = movements.filter { it.jeepNo == jeepNo }.maxByOrNull { it.timestamp }
+
+            // Determine if jeep is currently on movement or available
+            val isOnMovement = latest != null && !latest.isCompleted && latest.returningArrivalTime.isBlank()
+
+            if (isOnMovement && latest != null) {
+                onMovementList.add(
+                    JeepAvailabilityItem(
+                        jeepNo = jeepNo,
+                        isAvailable = false,
+                        turnNumber = 0,
+                        lastArrivalDate = latest.arrivalDate.ifBlank { todayStr },
+                        lastArrivalTime = latest.arrivalTime.ifBlank { latest.departureTime },
+                        arrivalTimestamp = Long.MAX_VALUE,
+                        driverName = latest.driverName,
+                        currentLocation = latest.toStation.ifBlank { "On Road" },
+                        movementDestination = latest.toStation,
+                        departureTime = latest.departureTime,
+                        departureDate = latest.departureDate,
+                        crewSummary = latest.outwardCrews,
+                        statusDescription = "On Duty to ${latest.toStation} (${latest.departureTime})"
+                    )
+                )
+            } else {
+                val arrDate = latest?.returningArrivalDate?.ifBlank { latest.arrivalDate.ifBlank { todayStr } } ?: todayStr
+                val arrTime = latest?.returningArrivalTime?.ifBlank { latest.arrivalTime.ifBlank { getDefaultJeepArrivalTime(jeepNo) } } ?: getDefaultJeepArrivalTime(jeepNo)
+                val timestamp = parseJeepTimestamp(arrDate, arrTime, latest?.timestamp ?: getDefaultJeepTimestamp(jeepNo))
+
+                availableList.add(
+                    JeepAvailabilityItem(
+                        jeepNo = jeepNo,
+                        isAvailable = true,
+                        turnNumber = 0, // Assigned after sorting
+                        lastArrivalDate = arrDate,
+                        lastArrivalTime = arrTime,
+                        arrivalTimestamp = timestamp,
+                        driverName = latest?.driverName ?: "Lobby Driver",
+                        currentLocation = "KHS Lobby",
+                        movementDestination = "",
+                        departureTime = "",
+                        departureDate = "",
+                        crewSummary = latest?.returningCrews ?: "",
+                        statusDescription = if (latest != null) "Available at KHS Lobby (Returned from ${latest.returningFromStation.ifBlank { latest.toStation }})" else "Available at KHS Lobby"
+                    )
+                )
+            }
+        }
+
+        // Sort available jeeps by last arrival time ascending (Earliest arrival = Turn #1)
+        val sortedAvailable = availableList.sortedBy { it.arrivalTimestamp }.mapIndexed { index, item ->
+            item.copy(turnNumber = index + 1)
+        }
+
+        return sortedAvailable + onMovementList
+    }
+
+    private fun getDefaultJeepArrivalTime(jeepNo: String): String {
+        return when (jeepNo) {
+            "89" -> "05:30"
+            "89(ll)" -> "06:15"
+            "91" -> "07:00"
+            "22" -> "07:45"
+            "31" -> "08:30"
+            "79" -> "09:15"
+            else -> "10:00"
+        }
+    }
+
+    private fun getDefaultJeepTimestamp(jeepNo: String): Long {
+        val calendar = Calendar.getInstance()
+        val minutes = when (jeepNo) {
+            "89" -> 5 * 60 + 30
+            "89(ll)" -> 6 * 60 + 15
+            "91" -> 7 * 60
+            "22" -> 7 * 60 + 45
+            "31" -> 8 * 60 + 30
+            "79" -> 9 * 60 + 15
+            else -> 10 * 60
+        }
+        calendar.set(Calendar.HOUR_OF_DAY, minutes / 60)
+        calendar.set(Calendar.MINUTE, minutes % 60)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        return calendar.timeInMillis
+    }
+
+    private fun parseJeepTimestamp(dateStr: String, timeStr: String, fallback: Long): Long {
+        return try {
+            val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault())
+            sdf.parse("$dateStr $timeStr")?.time ?: fallback
+        } catch (e: Exception) {
+            fallback
+        }
+    }
+
+    fun submitJeepMovement(record: JeepMovementRecord, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val newId = repository.insertJeepMovement(record)
+                val savedRecord = record.copy(id = newId)
+
+                val webhook = _sheetsWebhookUrl.value
+                if (webhook.isNotBlank()) {
+                    repository.syncJeepMovementToSheets(webhook, savedRecord)
+                }
+
+                _uiMessage.emit("जीप ${record.jeepNo} का मूवमेंट सफलतापूर्वक दर्ज हुआ!")
+                onResult(true)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiMessage.emit("मूवमेंट दर्ज करने में त्रुटि: ${e.message}")
+                onResult(false)
+            }
+        }
+    }
+
+    fun deleteJeepMovement(id: Long) {
+        viewModelScope.launch {
+            repository.deleteJeepMovement(id)
+            _uiMessage.emit("मूवमेंट रिकॉर्ड हटा दिया गया")
+        }
+    }
+
+    // Roster & TLC Operations
+    fun submitRosterTlc(record: RosterTlcRecord, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val newId = repository.insertRosterTlcRecord(record)
+                val savedRecord = record.copy(id = newId)
+
+                val webhook = _sheetsWebhookUrl.value
+                if (webhook.isNotBlank()) {
+                    repository.syncRosterTlcToSheets(webhook, savedRecord)
+                }
+
+                _uiMessage.emit("रोस्टर एवं TLC अपडेट (${record.shiftTiming}) सफलतापूर्वक दर्ज हुआ!")
+                onResult(true)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiMessage.emit("रोस्टर दर्ज करने में त्रुटि: ${e.message}")
+                onResult(false)
+            }
+        }
+    }
+
+    fun deleteRosterTlc(id: Long) {
+        viewModelScope.launch {
+            repository.deleteRosterTlcRecord(id)
+            _uiMessage.emit("रोस्टर रिकॉर्ड हटा दिया गया")
         }
     }
 }

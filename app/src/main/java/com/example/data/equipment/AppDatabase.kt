@@ -11,9 +11,11 @@ import androidx.room.RoomDatabase
         PrRequest::class,
         LongHourDutyRecord::class,
         StoreIssueRecord::class,
-        StoreShiftRecord::class
+        StoreShiftRecord::class,
+        JeepMovementRecord::class,
+        RosterTlcRecord::class
     ],
-    version = 4,
+    version = 6,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -21,6 +23,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun prDao(): PrDao
     abstract fun longHourDao(): LongHourDao
     abstract fun storeDao(): StoreDao
+    abstract fun jeepDao(): JeepDao
+    abstract fun rosterTlcDao(): RosterTlcDao
 
     companion object {
         @Volatile

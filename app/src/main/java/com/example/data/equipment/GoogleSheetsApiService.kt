@@ -131,4 +131,22 @@ interface GoogleSheetsApiService {
         @Url webhookUrl: String,
         @Body payload: StoreShiftSheetPayload
     ): Response<GoogleSheetResponse>
+
+    @POST
+    suspend fun syncJeepMovement(
+        @Url webhookUrl: String,
+        @Body payload: JeepMovementSheetPayload
+    ): Response<GoogleSheetResponse>
+
+    @POST
+    suspend fun syncPrRemark(
+        @Url webhookUrl: String,
+        @Body payload: PrRemarkSheetPayload
+    ): Response<GoogleSheetResponse>
+
+    @POST
+    suspend fun syncRosterTlc(
+        @Url webhookUrl: String,
+        @Body payload: RosterTlcSheetPayload
+    ): Response<GoogleSheetResponse>
 }

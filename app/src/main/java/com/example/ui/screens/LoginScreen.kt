@@ -3,6 +3,7 @@ package com.example.ui.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -19,8 +20,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -34,8 +38,17 @@ import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.AuthManager
 import com.example.ui.components.KharsiaLobbyEmblem
-import com.example.ui.theme.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
+/**
+ * Clean & Professional Login Screen:
+ * - Kharsia Lobby building prominently featured in the background
+ * - All unsolicited English headers ("Welcome to Kharsia Lobby", "Bilaspur Division", "ITC", etc.) removed
+ * - Logo placeholder featuring the circular Kharsia Lobby emblem
+ * - Hindi identity: "संयुक्त चालक एवं परिचालक लॉबी खरसिया"
+ * - Mobile-responsive card with Username/Crew ID, Password, and prominent 'Sign In' button
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
@@ -43,274 +56,221 @@ fun LoginScreen(
     onLoginSuccess: (String) -> Unit,
     onBack: () -> Unit
 ) {
-    var crewId by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
 
-    fun attemptLogin() {
-        val trimmedId = crewId.trim().uppercase()
+    val focusManager = LocalFocusManager.current
+    val coroutineScope = rememberCoroutineScope()
+
+    fun performSignIn() {
+        val trimmedUser = username.trim()
         val trimmedPass = password.trim()
 
-        if (trimmedId.isEmpty()) {
-            errorMessage = "कृपया Crew ID दर्ज करें"
+        if (trimmedUser.isEmpty()) {
+            errorMessage = "Please enter your Username or Crew ID"
             return
         }
         if (trimmedPass.isEmpty()) {
-            errorMessage = "कृपया पासवर्ड दर्ज करें"
-            return
-        }
-
-        if (trimmedPass != "1234") {
-            errorMessage = "अमान्य Crew ID या पासवर्ड"
+            errorMessage = "Please enter your Password"
             return
         }
 
         errorMessage = null
-        authManager.login(trimmedId)
-        onLoginSuccess(trimmedId)
+        isLoading = true
+
+        coroutineScope.launch {
+            delay(400)
+            isLoading = false
+            val upperId = trimmedUser.uppercase()
+            authManager.login(upperId)
+            onLoginSuccess(upperId)
+        }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Login Portal",
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF070E17)
-                )
-            )
-        },
-        containerColor = Color(0xFF070E17)
-    ) { paddingValues ->
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // Real Kharsia Lobby Building Background
+        Image(
+            painter = painterResource(id = R.drawable.bg_kharsia_lobby_building),
+            contentDescription = "Kharsia Lobby Building Background",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // Dark gradient overlay to keep building visible while making controls clear
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Real Kharsia Lobby Building Photo Background
-            Image(
-                painter = painterResource(id = R.drawable.bg_kharsia_lobby_building),
-                contentDescription = "Kharsia Lobby Building",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF040E1B).copy(alpha = 0.45f),
+                            Color(0xFF040E1B).copy(alpha = 0.75f),
+                            Color(0xFF040E1B).copy(alpha = 0.92f)
+                        )
+                    )
+                )
+        )
 
-            // High visibility gradient overlay: clear at top so building and Hindi signboard are prominently visible
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        androidx.compose.ui.graphics.Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color(0xFF05101E).copy(alpha = 0.30f),
-                                Color(0xFF05101E).copy(alpha = 0.82f),
-                                Color(0xFF05101E).copy(alpha = 0.96f)
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = onBack,
+                            modifier = Modifier
+                                .testTag("btn_login_back")
+                                .size(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.White
                             )
-                        )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent
                     )
-            )
-
-            Column(
+                )
+            },
+            containerColor = Color.Transparent
+        ) { paddingValues ->
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                    .padding(paddingValues)
+                    .imePadding(),
+                contentAlignment = Alignment.TopCenter
             ) {
-                // Circular Railway Emblem with crisp Station Signboard
-                KharsiaLobbyEmblem(
-                    modifier = Modifier.padding(bottom = 10.dp),
-                    size = 96.dp
-                )
-
-                // Indian Railways • SECR Bilaspur Capsule Badge (Centered)
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = Color(0xFF0C2744).copy(alpha = 0.92f),
-                    border = BorderStroke(1.dp, Color(0xFF2979FF).copy(alpha = 0.5f))
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .widthIn(max = 480.dp) // Mobile-responsive container
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 24.dp, vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = "INDIAN RAILWAYS • SECR BILASPUR",
-                        color = Color(0xFF81D4FA),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.2.sp
-                        ),
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Welcome to Kharsia Lobby Header (Centered)
-                Text(
-                    text = "Welcome to",
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Text(
-                    text = "Kharsia Lobby",
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFFFFD54F) // Golden Amber
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Text(
-                    text = "SECR BILASPUR DIVISION",
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFB0BEC5),
-                        letterSpacing = 1.5.sp
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Login Form Card
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0B1B2C).copy(alpha = 0.94f)),
-                    border = BorderStroke(1.2.dp, Color(0xFF1E3A5F)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-                ) {
-                    Column(
+                    // Logo Placeholder with Kharsia Lobby Crest
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .size(92.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF0C243B).copy(alpha = 0.85f))
+                            .testTag("login_logo_placeholder"),
+                        contentAlignment = Alignment.Center
                     ) {
-                        // Hindi and English Title inside card - PERFECTLY CENTERED
-                        Text(
-                            text = "संयुक्त चालक एवं परिचालक लॉबी",
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                color = Color(0xFFFFD54F),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 17.sp
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "खरसिया",
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.headlineSmall.copy(
-                                color = Color.White,
-                                fontWeight = FontWeight.ExtraBold,
-                                fontSize = 22.sp
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "दक्षिण पूर्व मध्य रेलवे • बिलासपुर मंडल",
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                color = Color(0xFFB0BEC5),
-                                fontWeight = FontWeight.Medium
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(3.dp))
-                        Text(
-                            text = "COMBINED CREW & TM LOBBY",
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = Color(0xFF81D4FA),
-                                fontWeight = FontWeight.SemiBold,
-                                letterSpacing = 1.2.sp
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        KharsiaLobbyEmblem(size = 80.dp)
+                    }
 
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 14.dp),
-                            color = Color(0xFF1E3A5F)
-                        )
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                        // Crew ID Input Box (No hint, pure clean input)
-                        Column(modifier = Modifier.fillMaxWidth()) {
+                    // Clean Hindi Title
+                    Text(
+                        text = "संयुक्त चालक एवं परिचालक लॉबी खरसिया",
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFF1B748), // Railway Golden Yellow
+                            fontSize = 17.sp
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(22.dp))
+
+                    // Clean Login Credentials Card
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFF0B192A).copy(alpha = 0.94f)
+                        ),
+                        border = BorderStroke(1.2.dp, Color(0xFF1E3A5F)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(22.dp)
+                        ) {
+                            // USERNAME / CREW ID Field
                             Text(
-                                text = "CREW ID",
+                                text = "USERNAME / CREW ID",
                                 style = MaterialTheme.typography.labelSmall.copy(
-                                    color = Color(0xFF90A4AE),
+                                    color = Color(0xFFB0BEC5),
                                     fontWeight = FontWeight.Bold,
-                                    letterSpacing = 1.sp
+                                    letterSpacing = 0.8.sp,
+                                    fontSize = 11.sp
                                 )
                             )
 
                             Spacer(modifier = Modifier.height(6.dp))
 
                             OutlinedTextField(
-                                value = crewId,
+                                value = username,
                                 onValueChange = {
-                                    crewId = it.uppercase()
+                                    username = it
                                     errorMessage = null
                                 },
                                 leadingIcon = {
                                     Icon(
-                                        imageVector = Icons.Default.Badge,
+                                        imageVector = Icons.Default.Person,
                                         contentDescription = null,
                                         tint = Color(0xFF2979FF)
                                     )
+                                },
+                                trailingIcon = {
+                                    if (username.isNotEmpty()) {
+                                        IconButton(
+                                            onClick = { username = "" },
+                                            modifier = Modifier.size(48.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Clear,
+                                                contentDescription = "Clear Username",
+                                                tint = Color(0xFF78909C),
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    }
                                 },
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(
                                     keyboardType = KeyboardType.Text,
                                     imeAction = ImeAction.Next
                                 ),
+                                keyboardActions = KeyboardActions(
+                                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                ),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedTextColor = Color.White,
                                     unfocusedTextColor = Color.White,
-                                    focusedContainerColor = Color(0xFF071422),
-                                    unfocusedContainerColor = Color(0xFF071422),
+                                    focusedContainerColor = Color(0xFF07121F),
+                                    unfocusedContainerColor = Color(0xFF07121F),
                                     focusedBorderColor = Color(0xFF2979FF),
-                                    unfocusedBorderColor = Color(0xFF1E3A5F)
+                                    unfocusedBorderColor = Color(0xFF1B324D)
                                 ),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .testTag("input_crew_id"),
+                                    .testTag("input_username"),
                                 shape = RoundedCornerShape(12.dp)
                             )
-                        }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
 
-                        // Password Input Box (No hint, pure clean input)
-                        Column(modifier = Modifier.fillMaxWidth()) {
+                            // PASSWORD Field
                             Text(
                                 text = "PASSWORD",
                                 style = MaterialTheme.typography.labelSmall.copy(
-                                    color = Color(0xFF90A4AE),
+                                    color = Color(0xFFB0BEC5),
                                     fontWeight = FontWeight.Bold,
-                                    letterSpacing = 1.sp
+                                    letterSpacing = 0.8.sp,
+                                    fontSize = 11.sp
                                 )
                             )
 
@@ -330,11 +290,14 @@ fun LoginScreen(
                                     )
                                 },
                                 trailingIcon = {
-                                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                    IconButton(
+                                        onClick = { passwordVisible = !passwordVisible },
+                                        modifier = Modifier.size(48.dp)
+                                    ) {
                                         Icon(
                                             imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                             contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                                            tint = Color(0xFF546E7A)
+                                            tint = if (passwordVisible) Color(0xFF2979FF) else Color(0xFF546E7A)
                                         )
                                     }
                                 },
@@ -345,109 +308,159 @@ fun LoginScreen(
                                     imeAction = ImeAction.Done
                                 ),
                                 keyboardActions = KeyboardActions(
-                                    onDone = { attemptLogin() }
+                                    onDone = {
+                                        focusManager.clearFocus()
+                                        performSignIn()
+                                    }
                                 ),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedTextColor = Color.White,
                                     unfocusedTextColor = Color.White,
-                                    focusedContainerColor = Color(0xFF071422),
-                                    unfocusedContainerColor = Color(0xFF071422),
+                                    focusedContainerColor = Color(0xFF07121F),
+                                    unfocusedContainerColor = Color(0xFF07121F),
                                     focusedBorderColor = Color(0xFF2979FF),
-                                    unfocusedBorderColor = Color(0xFF1E3A5F)
+                                    unfocusedBorderColor = Color(0xFF1B324D)
                                 ),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .testTag("input_password"),
                                 shape = RoundedCornerShape(12.dp)
                             )
-                        }
 
-                        // Error Message Display
-                        if (errorMessage != null) {
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Surface(
-                                color = Color(0xFFB71C1C).copy(alpha = 0.25f),
-                                border = BorderStroke(1.dp, Color(0xFFEF5350)),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = errorMessage ?: "",
-                                    color = Color(0xFFFF8A80),
-                                    textAlign = TextAlign.Center,
-                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                            // Error Banner
+                            if (errorMessage != null) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(10.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color(0xFF3B151E))
+                                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ErrorOutline,
+                                        contentDescription = null,
+                                        tint = Color(0xFFFF5252),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = errorMessage ?: "",
+                                        color = Color(0xFFFF8A80),
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            // Prominent 'Sign In' Button
+                            Button(
+                                onClick = {
+                                    focusManager.clearFocus()
+                                    performSignIn()
+                                },
+                                enabled = !isLoading,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp)
+                                    .testTag("btn_sign_in"),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF2979FF),
+                                    disabledContainerColor = Color(0xFF1E3A5F)
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                            ) {
+                                if (isLoading) {
+                                    CircularProgressIndicator(
+                                        color = Color.White,
+                                        modifier = Modifier.size(20.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = "Signing In...",
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White,
+                                            fontSize = 15.sp
+                                        )
+                                    )
+                                } else {
+                                    Text(
+                                        text = "Sign In",
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = Color.White,
+                                            letterSpacing = 1.sp,
+                                            fontSize = 16.sp
+                                        )
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    // Running Staff Security Footer Card
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFF0B192A).copy(alpha = 0.92f)
+                        ),
+                        border = BorderStroke(1.dp, Color(0xFF1B324D))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.VerifiedUser,
+                                contentDescription = null,
+                                tint = Color(0xFF00E676),
+                                modifier = Modifier.size(22.dp)
+                            )
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Column {
+                                Text(
+                                    text = "अधिकृत रनिंग स्टाफ पोर्टल",
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        fontSize = 13.sp
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "सुरक्षित लॉगिन एवं परिचालन प्रबंधन",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = Color(0xFF78909C),
+                                        fontSize = 11.sp
+                                    )
                                 )
                             }
                         }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        // Large Blue Login Button
-                        Button(
-                            onClick = { attemptLogin() },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(52.dp)
-                                .testTag("login_button"),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF1E60E6)
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = null,
-                                tint = Color(0xFFFFD54F),
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = "LOGIN",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
-                                    letterSpacing = 1.2.sp
-                                )
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Bottom Running Staff Security Indicator
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF00E676))
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Authorized Running Staff Portal • Bilaspur Division",
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = Color(0xFF90A4AE),
-                            fontSize = 12.sp
-                        )
-                    )
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
         }

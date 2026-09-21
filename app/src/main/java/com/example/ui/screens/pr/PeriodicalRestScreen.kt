@@ -170,6 +170,8 @@ fun PeriodicalRestScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .consumeWindowInsets(paddingValues)
+                .imePadding()
                 .background(LightSurface)
         ) {
             // Tab Row
