@@ -4,7 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 
 class AuthManager(context: Context) {
-    private val prefs: SharedPreferences = context.getSharedPreferences("kharsia_auth_prefs", Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences =
+        context.getSharedPreferences("kharsia_auth_prefs", Context.MODE_PRIVATE)
 
     var isLoggedIn: Boolean
         get() = prefs.getBoolean("is_logged_in", false)

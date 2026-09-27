@@ -1,8 +1,8 @@
 package com.example.ui.theme
 
 import android.app.Activity
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
@@ -15,36 +15,39 @@ private val LightColorScheme = lightColorScheme(
     onPrimary = Color.White,
     primaryContainer = RailwayBlue,
     onPrimaryContainer = Color.White,
-    secondary = RailwayAmber,
-    onSecondary = Color.Black,
+    secondary = RailwayLightBlue,
+    onSecondary = Color.White,
+    tertiary = RailwayAmber,
+    onTertiary = Color.Black,
     background = LightBackground,
     onBackground = TextPrimary,
     surface = Color.White,
     onSurface = TextPrimary,
     surfaceVariant = LightSurface,
     onSurfaceVariant = TextSecondary,
+    outline = CardBorder,
     error = RailwayRed,
     onError = Color.White
 )
 
 @Composable
 fun KharsiaLobbyTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = LightColorScheme
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as Activity).window
-            window.statusBarColor = RailwayNavy.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+            val window = (view.context as? Activity)?.window
+            window?.let {
+                it.statusBarColor = RailwayNavy.toArgb()
+                WindowCompat.getInsetsController(it, view).isAppearanceLightStatusBars = false
+            }
         }
     }
 
     MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography(),
+        colorScheme = LightColorScheme,
         content = content
     )
 }

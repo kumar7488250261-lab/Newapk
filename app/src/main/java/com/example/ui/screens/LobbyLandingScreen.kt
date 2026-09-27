@@ -1,17 +1,34 @@
 package com.example.ui.screens
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -23,223 +40,160 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.ui.components.KharsiaLobbyEmblem
+import com.example.ui.theme.DarkBorderBlue
+import com.example.ui.theme.DarkCanvasBg
+import com.example.ui.theme.DarkSurfaceNavy
+import com.example.ui.theme.RailwayGold
 
-/**
- * Step 3: Landing / Lobby Entry Screen (Matching Screenshot 3).
- * Shows building illustration in background, Indian Railways capsule,
- * the distinct Gold-bordered Hindi/English card, and the prominent blue LOGIN button.
- */
 @Composable
 fun LobbyLandingScreen(
-    onNavigateToLogin: () -> Unit,
-    onNavigateToGuestDirectory: () -> Unit = {}
+    onNavigateToLogin: () -> Unit
 ) {
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(DarkCanvasBg)
     ) {
-        // Real Kharsia Lobby Building Background
-        Image(
-            painter = painterResource(id = R.drawable.bg_kharsia_lobby_building),
-            contentDescription = "Kharsia Lobby Building",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-
-        // Gradient overlay: clear at top so building facade is visible, smooth dark navy at bottom
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            Color(0xFF040E1B).copy(alpha = 0.25f),
-                            Color(0xFF040E1B).copy(alpha = 0.75f),
-                            Color(0xFF040E1B).copy(alpha = 0.96f)
-                        )
-                    )
-                )
-        )
-
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.fillMaxSize()
         ) {
-            // Top Section: Emblem + Division Capsule Tag
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(top = 16.dp)
+            // Hero building header
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(240.dp)
             ) {
-                KharsiaLobbyEmblem(
-                    modifier = Modifier.padding(bottom = 12.dp),
-                    size = 80.dp
+                Image(
+                    painter = painterResource(id = R.drawable.bg_kharsia_lobby_building),
+                    contentDescription = "Kharsia Lobby Building",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
                 )
-
-                Surface(
-                    color = Color(0xFF0C243B).copy(alpha = 0.94f),
-                    shape = RoundedCornerShape(20.dp),
-                    border = BorderStroke(1.dp, Color(0xFF1E4D7A))
-                ) {
-                    Text(
-                        text = "INDIAN RAILWAYS • SECR BILASPUR",
-                        color = Color(0xFF64B5F6),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = 1.2.sp
-                        ),
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
-                    )
-                }
-            }
-
-            // Central Card matching Screenshot 3 exactly
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF0B1E33).copy(alpha = 0.94f)),
-                border = BorderStroke(1.5.dp, Color(0xFFE5A93C).copy(alpha = 0.85f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-            ) {
-                Column(
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 28.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, DarkCanvasBg)
+                            )
+                        )
+                )
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 8.dp)
                 ) {
-                    Text(
-                        text = "संयुक्त चालक एवं परिचालक लॉबी",
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFF1B748), // Golden yellow
-                            fontSize = 17.sp
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "खरसिया",
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color.White,
-                            fontSize = 28.sp
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "दक्षिण पूर्व मध्य रेलवे",
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = Color(0xFF90CAF9),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-                    HorizontalDivider(color = Color(0xFF1E3A5F), thickness = 1.dp)
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Text(
-                        text = "COMBINED CREW & TM LOBBY",
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            letterSpacing = 1.sp,
-                            fontSize = 14.sp
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "Running Staff Management Portal",
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = Color(0xFF78909C),
-                            fontSize = 12.sp
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    KharsiaLobbyEmblem(size = 84.dp)
                 }
             }
 
-            // Bottom Login Action Area matching Screenshot 3
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 12.dp),
+                    .padding(horizontal = 24.dp, vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Bright Blue LOGIN Button with Lock icon and Arrow
-                Button(
-                    onClick = onNavigateToLogin,
+                Text(
+                    text = "SOUTH EAST CENTRAL RAILWAY",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = RailwayGold,
+                    letterSpacing = 1.2.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "खरसिया लॉबी • KHARSIA LOBBY",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White
+                )
+                Text(
+                    text = "Bilaspur Division Integrated Crew Portal",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFA0B4D0)
+                )
+
+                Spacer(modifier = Modifier.height(28.dp))
+
+                // Official Staff Login Card (NO directory button or external links)
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = DarkSurfaceNavy),
+                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
-                        .testTag("btn_staff_login"),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2979FF)),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
+                        .border(1.dp, DarkBorderBlue, RoundedCornerShape(16.dp))
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = null,
-                        tint = Color(0xFFFFD54F),
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "LOGIN",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color.White,
-                            letterSpacing = 1.5.sp
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(RailwayGold.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Security,
+                                contentDescription = null,
+                                tint = RailwayGold,
+                                modifier = Modifier.size(26.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = "Railway Crew & Staff Portal",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
                         )
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp)
-                    )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Sign in to access 24x7 Operations, Store Registers, PR Remarks, Long Hour duties, Shift Rosters & Staff Directory",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFFC0D2EB),
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        Button(
+                            onClick = onNavigateToLogin,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .testTag("btn_staff_login"),
+                            colors = ButtonDefaults.buttonColors(containerColor = RailwayGold),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = null,
+                                    tint = Color(0xFF0F1E36)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Staff Sign In (लॉगिन करें)",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp,
+                                    color = Color(0xFF0F1E36)
+                                )
+                            }
+                        }
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Shield,
-                        contentDescription = null,
-                        tint = Color(0xFF00E676),
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Authorized Running Staff Portal • Bilaspur Division",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = Color(0xFF78909C),
-                            fontSize = 11.sp
-                        )
-                    )
-                }
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = "Authorized SECR Personnel Only • 24x7 Support",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFF7E8EA6),
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }

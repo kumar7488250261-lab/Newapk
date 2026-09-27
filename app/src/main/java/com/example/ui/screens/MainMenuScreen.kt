@@ -1,315 +1,580 @@
 package com.example.ui.screens
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.FactCheck
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.ContactPhone
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.KharsiaLobbyEmblem
-import com.example.ui.theme.*
-import kotlinx.coroutines.launch
+import com.example.ui.theme.DarkBackgroundNavy
+import com.example.ui.theme.DarkBorderBlue
+import com.example.ui.theme.DarkCanvasBg
+import com.example.ui.theme.DarkSurfaceNavy
+import com.example.ui.theme.RailwayGold
+import com.example.ui.theme.RailwayGreen
+import com.example.ui.theme.RailwayRed
+
+private const val COMMON_LOCKED_PASSWORD = "kharsia@cc"
+private const val JEEP_LOCKED_PASSWORD = "kharsia@jeep"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainMenuScreen(
+    currentUserId: String,
     onNavigateToStaffDirectory: () -> Unit,
     onNavigateToEquipmentRegister: () -> Unit,
     onNavigateToPeriodicalRest: () -> Unit,
     onNavigateToLongHour: () -> Unit,
-    onNavigateToJeepMovement: () -> Unit,
-    onNavigateToRosterTlc: () -> Unit = {},
-    snackbarHostState: SnackbarHostState,
-    loggedInUserId: String = "KHS1234",
-    onLogout: () -> Unit = {}
+    onNavigateToJeepSubMenu: () -> Unit,
+    onNavigateToRosterTlc: () -> Unit,
+    onNavigateToLrDeclaration: () -> Unit,
+    onLogout: () -> Unit
 ) {
-    val coroutineScope = rememberCoroutineScope()
+    // Password Prompt State
+    var showPasswordDialog by remember { mutableStateOf(false) }
+    var targetTitle by remember { mutableStateOf("") }
+    var pendingNavigation by remember { mutableStateOf<(() -> Unit)?>(null) }
+    var passwordInput by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
 
-    val menuItems = remember {
-        listOf(
-            MenuItemData(
-                title = "Staff Directory",
-                subtitle = "Call Book & Contact details of 14 lobbies",
-                icon = Icons.Default.ContactPhone,
-                isEnabled = true,
-                statusBadge = "ACTIVE >",
-                testTag = "menu_staff_directory",
-                iconTint = Color(0xFF00E676),
-                iconBgColor = Color(0xFF003820)
-            ),
-            MenuItemData(
-                title = "PR remark",
-                subtitle = "Mark PR, Auto-fetch Crew Details, Sign-off & Admin Approval",
-                icon = Icons.Default.EventAvailable,
-                isEnabled = true,
-                statusBadge = "ACTIVE >",
-                testTag = "menu_periodical_rest",
-                iconTint = Color(0xFF2979FF),
-                iconBgColor = Color(0xFF0D2550)
-            ),
-            MenuItemData(
-                title = "Store register",
-                subtitle = "Fast Issue & Fast Return / CHO Equipment Register",
-                icon = Icons.Default.Inventory2,
-                isEnabled = true,
-                statusBadge = "ACTIVE >",
-                testTag = "menu_store_register",
-                iconTint = Color(0xFFBA68C8),
-                iconBgColor = Color(0xFF331640)
-            ),
-            MenuItemData(
-                title = "Long hour update",
-                subtitle = "Crew duty hours & overtime monitoring",
-                icon = Icons.Default.HourglassEmpty,
-                isEnabled = true,
-                statusBadge = "ACTIVE >",
-                testTag = "menu_long_hour",
-                iconTint = Color(0xFFFFB74D),
-                iconBgColor = Color(0xFF3D260D)
-            ),
-            MenuItemData(
-                title = "Roaster &TLC update",
-                subtitle = "Shift wise roaster & TLC updates, Admin portal entry",
-                icon = Icons.Default.CalendarMonth,
-                isEnabled = true,
-                statusBadge = "ACTIVE >",
-                testTag = "menu_roaster_tlc",
-                iconTint = Color(0xFF4FC3F7),
-                iconBgColor = Color(0xFF0E324A)
-            ),
-            MenuItemData(
-                title = "Jeep movement",
-                subtitle = "Jeep Availability & Entry (जीप उपलब्धता एवं एंट्री)",
-                icon = Icons.Default.DirectionsCar,
-                isEnabled = true,
-                statusBadge = "ACTIVE >",
-                testTag = "menu_jeep_movement",
-                iconTint = Color(0xFFFF4081),
-                iconBgColor = Color(0xFF421024)
-            ),
-            MenuItemData(
-                title = "Pdd &pad",
-                subtitle = "Pre-departure detention & arrival logs",
-                icon = Icons.Default.Train,
-                isEnabled = false,
-                statusBadge = "Coming Soon",
-                testTag = "menu_pdd_pad",
-                iconTint = Color(0xFF4DB6AC),
-                iconBgColor = Color(0xFF0C312E)
-            )
-        )
+    fun handleMenuClick(item: MenuItemData, destination: () -> Unit) {
+        if (item.isLocked) {
+            targetTitle = item.title
+            pendingNavigation = destination
+            passwordInput = ""
+            passwordError = null
+            passwordVisible = false
+            showPasswordDialog = true
+        } else {
+            destination()
+        }
     }
+
+    val menuItems = listOf(
+        // OPEN MENUS (Staff Directory & PR & LR Declaration)
+        MenuItemData(
+            title = "Staff Call Book",
+            hindiTitle = "स्टाफ डायरेक्टरी",
+            subtitle = "141 Stations & Lobbies",
+            icon = Icons.Default.ContactPhone,
+            isLocked = false,
+            statusBadge = "OPEN",
+            testTag = "menu_item_staff_directory",
+            gradientColors = listOf(Color(0xFF1E3A8A), Color(0xFF2563EB)),
+            borderColor = Color(0xFF60A5FA).copy(alpha = 0.5f)
+        ),
+        MenuItemData(
+            title = "Periodical Rest",
+            hindiTitle = "पी.आर रिमार्क",
+            subtitle = "Sign-Off & Rest",
+            icon = Icons.Default.Schedule,
+            isLocked = false,
+            statusBadge = "OPEN",
+            testTag = "menu_item_periodical_rest",
+            gradientColors = listOf(Color(0xFF065F46), Color(0xFF059669)),
+            borderColor = Color(0xFF34D399).copy(alpha = 0.5f)
+        ),
+        // LOCKED MENUS (Password Protected with kharsia@cc)
+        MenuItemData(
+            title = "Store Register",
+            hindiTitle = "उपकरण रजिस्टर",
+            subtitle = "Fast Issue & Return",
+            icon = Icons.Default.Inventory,
+            isLocked = true,
+            statusBadge = "LOCKED",
+            testTag = "menu_item_equipment_register",
+            gradientColors = listOf(Color(0xFF92400E), Color(0xFFD97706)),
+            borderColor = Color(0xFFFBBF24).copy(alpha = 0.5f)
+        ),
+        MenuItemData(
+            title = "Long Hour Duty",
+            hindiTitle = "लॉन्ग आवर अपडेट",
+            subtitle = "9+ Hours Relief Monitor",
+            icon = Icons.Default.Timer,
+            isLocked = true,
+            statusBadge = "LOCKED",
+            testTag = "menu_item_long_hour",
+            gradientColors = listOf(Color(0xFF991B1B), Color(0xFFDC2626)),
+            borderColor = Color(0xFFF87171).copy(alpha = 0.5f)
+        ),
+        // JEEP DI (PASSWORD: kharsia@jeep)
+        MenuItemData(
+            title = "JEEP DI",
+            hindiTitle = "जीप डी.आई",
+            subtitle = "Shift DI & Fleet Movement",
+            icon = Icons.Default.DirectionsCar,
+            isLocked = true,
+            statusBadge = "LOCKED",
+            testTag = "menu_item_jeep_movement",
+            gradientColors = listOf(Color(0xFF155E75), Color(0xFF0891B2)),
+            borderColor = Color(0xFF22D3EE).copy(alpha = 0.5f)
+        ),
+        MenuItemData(
+            title = "Shift Roster",
+            hindiTitle = "रोस्टर व TLC",
+            subtitle = "06-14, 14-22, 22-06",
+            icon = Icons.AutoMirrored.Filled.Assignment,
+            isLocked = true,
+            statusBadge = "LOCKED",
+            testTag = "menu_item_roster_tlc",
+            gradientColors = listOf(Color(0xFF581C87), Color(0xFF7C3AED)),
+            borderColor = Color(0xFFA78BFA).copy(alpha = 0.5f)
+        ),
+        // NEW MENU ITEM: LR DECLARATION (MONTHLY SECTION-WISE)
+        MenuItemData(
+            title = "LR Declaration",
+            hindiTitle = "एल.आर डिक्लेरेशन",
+            subtitle = "Monthly Section-Wise LR",
+            icon = Icons.AutoMirrored.Filled.FactCheck,
+            isLocked = false,
+            statusBadge = "MONTHLY LR",
+            testTag = "menu_item_lr_declaration",
+            gradientColors = listOf(Color(0xFF0F766E), Color(0xFF0D9488)),
+            borderColor = Color(0xFF2DD4BF).copy(alpha = 0.5f)
+        )
+    )
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        KharsiaLobbyEmblem(size = 40.dp)
-                        Spacer(modifier = Modifier.width(12.dp))
+                        KharsiaLobbyEmblem(size = 36.dp)
+                        Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "WELCOME TO KHARSIA LOBBY",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = Color.White,
-                                    letterSpacing = 0.8.sp
-                                )
+                                text = "KHARSIA LOBBY",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
                             )
                             Text(
-                                text = "SECR • Bilaspur Division • Indian Railways",
-                                style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFFF1B748))
+                                text = "SECR Bilaspur Division • User: $currentUserId",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = RailwayGold
                             )
                         }
                     }
                 },
                 actions = {
-                    // Crew ID Tag
-                    Surface(
-                        color = Color(0xFF102844),
-                        shape = RoundedCornerShape(20.dp),
-                        border = BorderStroke(1.dp, Color(0xFF1E4D7A))
+                    IconButton(
+                        onClick = onLogout,
+                        modifier = Modifier.testTag("btn_logout")
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                tint = Color(0xFF64B5F6),
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = loggedInUserId,
-                                color = Color.White,
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(6.dp))
-
-                    IconButton(onClick = onLogout) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
                             contentDescription = "Logout",
-                            tint = Color(0xFFFF5252)
+                            tint = Color.White
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF070E17))
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = DarkBackgroundNavy
+                )
             )
         },
-        containerColor = Color(0xFF070E17),
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues ->
+        containerColor = DarkCanvasBg
+    ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color(0xFF070E17))
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(innerPadding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             item {
-                Text(
-                    text = "OPERATIONAL MODULES",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = Color(0xFF78909C),
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.2.sp
-                    ),
-                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp)
-                )
-            }
-
-            items(menuItems, key = { it.testTag }) { item ->
-                DarkMenuCard(
-                    item = item,
-                    onClick = {
-                        when (item.testTag) {
-                            "menu_staff_directory" -> onNavigateToStaffDirectory()
-                            "menu_periodical_rest" -> onNavigateToPeriodicalRest()
-                            "menu_store_register" -> onNavigateToEquipmentRegister()
-                            "menu_long_hour" -> onNavigateToLongHour()
-                            "menu_jeep_movement" -> onNavigateToJeepMovement()
-                            "menu_roaster_tlc" -> onNavigateToRosterTlc()
-                            else -> {
-                                coroutineScope.launch {
-                                    snackbarHostState.showSnackbar("${item.title} सुविधा शीघ्र उपलब्ध होगी")
-                                }
-                            }
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = DarkSurfaceNavy),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, DarkBorderBlue, RoundedCornerShape(12.dp))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(RailwayGreen)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "Kharsia Lobby 24x7 Operations • 369 Running Staff Active",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Text(
+                                text = "South East Central Railway • Bilaspur Division",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = RailwayGold
+                            )
                         }
                     }
-                )
+                }
             }
 
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
+            // 2-Column Compact Colorful Box Grid
+            val chunkedItems = menuItems.chunked(2)
+            chunkedItems.forEach { pair ->
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        val item1 = pair[0]
+                        ColorfulMenuBox(
+                            item = item1,
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                when (item1.testTag) {
+                                    "menu_item_staff_directory" -> handleMenuClick(item1, onNavigateToStaffDirectory)
+                                    "menu_item_periodical_rest" -> handleMenuClick(item1, onNavigateToPeriodicalRest)
+                                    "menu_item_equipment_register" -> handleMenuClick(item1, onNavigateToEquipmentRegister)
+                                    "menu_item_long_hour" -> handleMenuClick(item1, onNavigateToLongHour)
+                                    "menu_item_jeep_movement" -> handleMenuClick(item1, onNavigateToJeepSubMenu)
+                                    "menu_item_roster_tlc" -> handleMenuClick(item1, onNavigateToRosterTlc)
+                                    "menu_item_lr_declaration" -> handleMenuClick(item1, onNavigateToLrDeclaration)
+                                }
+                            }
+                        )
+
+                        if (pair.size > 1) {
+                            val item2 = pair[1]
+                            ColorfulMenuBox(
+                                item = item2,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    when (item2.testTag) {
+                                        "menu_item_staff_directory" -> handleMenuClick(item2, onNavigateToStaffDirectory)
+                                        "menu_item_periodical_rest" -> handleMenuClick(item2, onNavigateToPeriodicalRest)
+                                        "menu_item_equipment_register" -> handleMenuClick(item2, onNavigateToEquipmentRegister)
+                                        "menu_item_long_hour" -> handleMenuClick(item2, onNavigateToLongHour)
+                                        "menu_item_jeep_movement" -> handleMenuClick(item2, onNavigateToJeepSubMenu)
+                                        "menu_item_roster_tlc" -> handleMenuClick(item2, onNavigateToRosterTlc)
+                                        "menu_item_lr_declaration" -> handleMenuClick(item2, onNavigateToLrDeclaration)
+                                    }
+                                }
+                            )
+                        } else {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
             }
+        }
+
+        // =========================================================================
+        // PASSWORD PROTECTION DIALOG (PASSWORD: kharsia@cc)
+        // =========================================================================
+        if (showPasswordDialog) {
+            AlertDialog(
+                onDismissRequest = { showPasswordDialog = false },
+                containerColor = DarkSurfaceNavy,
+                shape = RoundedCornerShape(16.dp),
+                icon = {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(RailwayGold.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = RailwayGold,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                },
+                title = {
+                    Text(
+                        text = "Password Protected (सुरक्षित मेनू)",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Color.White
+                    )
+                },
+                text = {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Access to '$targetTitle' requires In-Charge password authorization.",
+                            fontSize = 12.5.sp,
+                            color = Color(0xFFA0B4D0),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(14.dp))
+                        OutlinedTextField(
+                            value = passwordInput,
+                            onValueChange = {
+                                passwordInput = it
+                                passwordError = null
+                            },
+                            label = { Text("Enter Password (पासवर्ड डालें)", fontSize = 12.sp) },
+                            singleLine = true,
+                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    val expectedPassword = if (targetTitle == "JEEP DI") JEEP_LOCKED_PASSWORD else COMMON_LOCKED_PASSWORD
+                                    if (passwordInput.trim() == expectedPassword) {
+                                        showPasswordDialog = false
+                                        pendingNavigation?.invoke()
+                                    } else {
+                                        passwordError = "Incorrect password! Please enter valid password."
+                                    }
+                                }
+                            ),
+                            trailingIcon = {
+                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                    Icon(
+                                        imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                        contentDescription = null,
+                                        tint = Color.Gray
+                                    )
+                                }
+                            },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedBorderColor = RailwayGold,
+                                unfocusedBorderColor = DarkBorderBlue
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("input_lock_password")
+                        )
+
+                        if (passwordError != null) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = passwordError ?: "",
+                                color = RailwayRed,
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            val expectedPassword = if (targetTitle == "JEEP DI") JEEP_LOCKED_PASSWORD else COMMON_LOCKED_PASSWORD
+                            if (passwordInput.trim() == expectedPassword) {
+                                showPasswordDialog = false
+                                pendingNavigation?.invoke()
+                            } else {
+                                passwordError = "Incorrect password! Please enter valid password."
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = RailwayGold),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.testTag("btn_unlock_menu")
+                    ) {
+                        Text(
+                            text = "Unlock & Open",
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF0F1E36)
+                        )
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(
+                        onClick = { showPasswordDialog = false },
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Cancel", color = Color.White)
+                    }
+                }
+            )
         }
     }
 }
 
 @Composable
-fun DarkMenuCard(
+fun ColorfulMenuBox(
     item: MenuItemData,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val borderColor = if (item.isEnabled) item.iconTint.copy(alpha = 0.5f) else Color(0xFF1B2E46)
-    val cardBg = Color(0xFF0C1929)
-
     Card(
-        modifier = Modifier
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        shape = RoundedCornerShape(14.dp),
+        modifier = modifier
             .fillMaxWidth()
+            .height(112.dp)
+            .border(1.2.dp, item.borderColor, RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(14.dp))
+            .background(Brush.verticalGradient(item.gradientColors))
             .clickable { onClick() }
-            .testTag(item.testTag),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = cardBg),
-        border = BorderStroke(1.dp, borderColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .testTag(item.testTag)
     ) {
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .padding(horizontal = 10.dp, vertical = 9.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Icon in colored container
-            Box(
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(item.iconBgColor),
-                contentAlignment = Alignment.Center
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = item.icon,
-                    contentDescription = null,
-                    tint = item.iconTint,
-                    modifier = Modifier.size(24.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White.copy(alpha = 0.22f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = item.icon,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(17.dp)
+                    )
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (item.isLocked) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(Color.Black.copy(alpha = 0.45f))
+                                .padding(horizontal = 5.dp, vertical = 2.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = "Locked",
+                                    tint = RailwayGold,
+                                    modifier = Modifier.size(11.dp)
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text(
+                                    text = "LOCKED",
+                                    fontSize = 8.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = RailwayGold
+                                )
+                            }
+                        }
+                    } else if (item.statusBadge.isNotBlank()) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(Color.Black.copy(alpha = 0.35f))
+                                .padding(horizontal = 5.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = item.statusBadge,
+                                fontSize = 8.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (item.statusBadge == "OPEN") RailwayGreen else RailwayGold
+                            )
+                        }
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
+            Column {
                 Text(
                     text = item.title,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = if (item.isEnabled) Color.White else Color(0xFF90A4AE)
-                    )
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    fontSize = 12.5.sp,
+                    maxLines = 1
                 )
-
-                Spacer(modifier = Modifier.height(2.dp))
-
+                if (item.hindiTitle.isNotBlank()) {
+                    Text(
+                        text = item.hindiTitle,
+                        fontWeight = FontWeight.SemiBold,
+                        color = RailwayGold,
+                        fontSize = 11.sp,
+                        maxLines = 1
+                    )
+                }
+                Spacer(modifier = Modifier.height(1.dp))
                 Text(
                     text = item.subtitle,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = Color(0xFF78909C),
-                        fontSize = 12.sp
-                    )
-                )
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            // Status Badge
-            Surface(
-                color = if (item.isEnabled) Color(0xFF003820) else Color(0xFF1D2833),
-                shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(
-                    1.dp,
-                    if (item.isEnabled) Color(0xFF00E676).copy(alpha = 0.6f) else Color(0xFF37474F)
-                )
-            ) {
-                Text(
-                    text = item.statusBadge,
-                    color = if (item.isEnabled) Color(0xFF00E676) else Color(0xFFB0BEC5),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    fontSize = 9.5.sp,
+                    color = Color.White.copy(alpha = 0.85f),
+                    maxLines = 1
                 )
             }
         }

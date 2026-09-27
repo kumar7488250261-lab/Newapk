@@ -12,10 +12,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.R
 
-/**
- * Official SECR Kharsia Lobby Emblem Logo.
- * Displays the authentic circular Kharsia Lobby railway emblem everywhere in the app.
- */
 @Composable
 fun KharsiaLobbyEmblem(
     modifier: Modifier = Modifier,

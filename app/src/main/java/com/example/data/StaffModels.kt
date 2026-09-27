@@ -29,5 +29,30 @@ data class Lobby(
 
 @JsonClass(generateAdapter = true)
 data class DirectoryResponse(
-    val lobbies: List<Lobby>
+    val lobbies: List<Lobby> = emptyList()
+)
+
+@JsonClass(generateAdapter = true)
+data class CrewMember(
+    val crewId: String = "",
+    val name: String = "",
+    val designation: String = "",
+    val category: String = "",
+    val cadre: String = "",
+    val mobile: String = ""
+)
+
+@JsonClass(generateAdapter = true)
+data class StationContact(
+    val sNo: Int = 0,
+    val code: String = "",
+    val name: String = "",
+    val cugMobile: String = "",
+    val landline: String = "",
+    val section: String = ""
+)
+
+@JsonClass(generateAdapter = true)
+data class StationResponse(
+    val stations: List<StationContact> = emptyList()
 )
