@@ -3,160 +3,938 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kharsia Lobby - Android App Download</title>
-  <meta name="description" content="SECR Bilaspur Division Kharsia Combined Crew Lobby - Equipment Register, Staff Call Book & PR Management Portal.">
-  <link rel="stylesheet" href="style.css">
+  <title>Kharsia Lobby • SECR Bilaspur Division — Data Portal & APK Download</title>
+  <meta name="description" content="SECR Bilaspur Division Kharsia Combined Lobby: Android APK Download, Station CUG Directory, Crew Master, and Lobbies Phone Book.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚂</text></svg>">
+  <style>
+    :root {
+      --bg: #090e17;
+      --surface: #111a29;
+      --surface-elevated: #162235;
+      --surface-hover: #1c2b42;
+      --border: #1f304b;
+      --border-accent: #2d466e;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --gold: #f59e0b;
+      --gold-glow: rgba(245, 158, 11, 0.15);
+      --green: #10b981;
+      --green-glow: rgba(16, 185, 129, 0.18);
+      --blue: #38bdf8;
+      --blue-navy: #0e1e38;
+      --badge-bg: #1e293b;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+      width: 100%;
+    }
+
+    /* Header & Hero */
+    header.hero {
+      padding: 2.5rem 0 2rem;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(14, 30, 56, 0.5) 0%, rgba(9, 14, 23, 0) 100%);
+    }
+
+    .badge-railway {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--blue-navy);
+      border: 1px solid var(--border-accent);
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+
+    .badge-railway .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    .hero-title {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .hero-hindi {
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: var(--gold);
+      margin-top: 0.25rem;
+    }
+
+    .hero-desc {
+      color: var(--text-muted);
+      max-width: 780px;
+      margin-top: 0.75rem;
+      font-size: 0.95rem;
+    }
+
+    /* Action bar / Download panel */
+    .download-panel {
+      margin-top: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+    }
+
+    .btn-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px var(--green-glow);
+    }
+
+    .btn-download:hover {
+      background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--surface-elevated);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 0.875rem;
+      padding: 0.75rem 1.15rem;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-accent);
+    }
+
+    .release-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-left: auto;
+      font-family: var(--font-mono);
+    }
+
+    .tag-pill {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    /* Main Content Section */
+    main {
+      padding: 2rem 0 4rem;
+      flex: 1;
+    }
+
+    /* Navigation Tabs */
+    .tabs-nav {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.75rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-radius: 8px 8px 0 0;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      position: relative;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: var(--surface);
+    }
+
+    .tab-btn.active {
+      color: var(--gold);
+      background: var(--surface);
+      border-bottom: 2px solid var(--gold);
+      margin-bottom: -2px;
+    }
+
+    .tab-badge {
+      background: var(--surface-elevated);
+      color: var(--text-dim);
+      font-size: 0.75rem;
+      padding: 0.1rem 0.45rem;
+      border-radius: 9999px;
+      font-family: var(--font-mono);
+    }
+
+    .tab-btn.active .tab-badge {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--gold);
+    }
+
+    /* Controls Bar: Search & Stats */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .search-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: #ffffff;
+      padding: 0.65rem 1rem 0.65rem 2.4rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: var(--font-mono);
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 1px var(--gold);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.8rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      pointer-events: none;
+      font-size: 0.9rem;
+    }
+
+    .filter-count {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    /* Tables & Data Views */
+    .table-container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow-x: auto;
+      margin-bottom: 1.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.875rem;
+    }
+
+    thead th {
+      background: var(--surface-elevated);
+      color: var(--gold);
+      font-weight: 700;
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border-accent);
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s ease;
+    }
+
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: var(--surface-hover);
+    }
+
+    tbody td {
+      padding: 0.75rem 1rem;
+      color: var(--text-main);
+      vertical-align: middle;
+    }
+
+    .code-cell {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--blue);
+      letter-spacing: 0.05em;
+    }
+
+    .id-pill {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.75rem;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: var(--blue);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+    }
+
+    .tel-link {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--green);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      transition: background 0.15s ease;
+    }
+
+    .tel-link:hover {
+      background: var(--green-glow);
+      text-decoration: underline;
+    }
+
+    /* Nested Directory Sections */
+    .lobby-group {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+
+    .lobby-header {
+      background: linear-gradient(90deg, #162438 0%, #111a29 100%);
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .lobby-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .category-group {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .category-group:last-child {
+      border-bottom: none;
+    }
+
+    .category-header {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Badge & Tag Helpers */
+    .tag-category {
+      background: var(--badge-bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    /* Empty state */
+    .empty-state {
+      padding: 3rem 1rem;
+      text-align: center;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 0;
+      background: var(--surface);
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      text-align: center;
+    }
+
+    footer a {
+      color: var(--gold);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: 1.75rem;
+      }
+      .download-panel {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .release-info {
+        margin-left: 0;
+        justify-content: space-between;
+      }
+      .tabs-nav {
+        gap: 0.25rem;
+      }
+      .tab-btn {
+        padding: 0.6rem 0.85rem;
+        font-size: 0.8rem;
+      }
+      tbody td, thead th {
+        padding: 0.6rem 0.75rem;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Hero Section -->
-    <header class="hero">
-      <div class="brand-badge">
+  <!-- Top Hero Header -->
+  <header class="hero">
+    <div class="container">
+      <div class="badge-railway">
         <span class="dot"></span>
-        <span>SECR Bilaspur Division • Indian Railways</span>
+        <span>SECR Bilaspur Division • Railway Operations</span>
       </div>
 
-      <div class="app-icon-wrapper">
-        <div class="app-icon">🚂</div>
-      </div>
-
-      <h1 class="title">Kharsia Lobby</h1>
-      <div class="subtitle-hindi">संयुक्त चालक एवं परिचालक लॉबी • खरसिया</div>
-      
-      <p class="description">
-        Official digital portal for SECR Bilaspur Division Kharsia Lobby. Includes Digital Equipment Register, 
-        comprehensive 14-Lobby Staff Directory & Call Book, and Periodical Rest (PR) Schedule Management.
+      <h1 class="hero-title">
+        <span>🚂 Kharsia Lobby Companion</span>
+      </h1>
+      <div class="hero-hindi">संयुक्त क्रू लॉबी खरसिया • डिजिटल रिकॉर्ड एवं डेटा पोर्टल</div>
+      <p class="hero-desc">
+        Real-time companion web portal and Android APK repository for South East Central Railway (SECR) Kharsia Combined Lobby. 
+        Browse Station CUG directories, Loco Running Crew rosters, and SECR division-wide lobby phonebooks directly from the browser.
       </p>
 
-      <!-- Download Card -->
-      <div class="download-card">
-        <div class="cta-group">
-          <a id="downloadBtn" 
-             href="https://github.com/abhishekused/Newapk/releases/download/debug-apk-build-4-1/Newapk-debug-build-4.apk" 
-             class="btn-primary" 
-             download>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            <span>Download APK</span>
-          </a>
-
-          <a id="releasePageBtn" 
-             href="https://github.com/abhishekused/Newapk/releases" 
-             target="_blank" 
-             rel="noopener noreferrer" 
-             class="btn-secondary">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-              <polyline points="15 3 21 3 21 9"></polyline>
-              <line x1="10" y1="14" x2="21" y2="3"></line>
-            </svg>
-            <span>View Releases</span>
-          </a>
-        </div>
-
-        <div class="release-meta">
-          <div class="meta-item">
-            <span>Release:</span>
-            <strong id="releaseTag">Debug APK Build #4</strong>
-          </div>
-          <div class="meta-item">
-            <span>Target OS:</span>
-            <strong>Android 8.0+</strong>
-          </div>
-          <div class="meta-item">
-            <span>Type:</span>
-            <strong>Debug APK (Direct Install)</strong>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <!-- Key App Features -->
-    <main>
-      <h2 class="section-title">Key Capabilities</h2>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">📦</div>
-          <h3>Digital Equipment Register</h3>
-          <p>Complete record of Walkie-Talkies, Tricolor Torches, HS Flags, and safety kits with real-time issue & return tracking.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">📖</div>
-          <h3>14 Lobbies Call Book</h3>
-          <p>Over 7,500 active contacts for Loco Pilots, ALPs, and Train Managers across Kharsia, Bilaspur, Raigarh, Korba, and more with 1-tap call.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">🗓️</div>
-          <h3>Periodical Rest (PR) Tracking</h3>
-          <p>Check upcoming and ongoing PR schedules, periodic rest compliance, and duty planning directly from your phone.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">🚨</div>
-          <h3>Speed Dials & Control Centres</h3>
-          <p>Direct contact numbers for CCC Bilaspur, TLC Power, TPC, SCADA, SSE OHE, P-Way, and Lobby emergency landlines.</p>
-        </div>
-      </div>
-
-      <!-- Installation Steps for Android -->
-      <div class="guide-card">
-        <h3>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+      <!-- Download Action Bar -->
+      <div class="download-panel">
+        <a id="downloadBtn" 
+           href="https://github.com/abhishekused/Newapk/releases" 
+           class="btn-download" 
+           download>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
-          How to Install the APK on Your Android Device
-        </h3>
-        <ol class="steps-list">
-          <li>Tap the <strong>Download APK</strong> button above to download the file directly to your phone.</li>
-          <li>When prompted by Android, tap <strong>Settings</strong> and enable <em>"Allow from this source"</em> to allow installing the debug APK.</li>
-          <li>Open the downloaded <code>.apk</code> file and tap <strong>Install</strong> to complete installation.</li>
-        </ol>
+          <span>Download Latest APK</span>
+        </a>
+
+        <a id="releasePageBtn" 
+           href="https://github.com/abhishekused/Newapk/releases" 
+           target="_blank" 
+           rel="noopener noreferrer" 
+           class="btn-secondary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+          <span>All Releases</span>
+        </a>
+
+        <div class="release-info">
+          <span>Release:</span>
+          <span id="versionTag" class="tag-pill">v1.0 (Latest)</span>
+          <span id="buildDate" style="display:none;"></span>
+        </div>
       </div>
-    </main>
+    </div>
+  </header>
 
-    <!-- Footer -->
-    <footer>
+  <!-- Main Data Section -->
+  <main class="container">
+    <!-- Dataset Tabs -->
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" onclick="switchTab('crew')" id="tab-btn-crew">
+        <span>👨‍✈️ Kharsia Running Crew</span>
+        <span class="tab-badge" id="count-crew">...</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('stations')" id="tab-btn-stations">
+        <span>🚉 SECR Stations CUG</span>
+        <span class="tab-badge" id="count-stations">...</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('directory')" id="tab-btn-directory">
+        <span>📞 14 Lobbies Directory</span>
+        <span class="tab-badge" id="count-directory">...</span>
+      </button>
+    </div>
+
+    <!-- Search Controls -->
+    <div class="controls-bar">
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" 
+               id="searchInput" 
+               class="search-input" 
+               placeholder="Search by ID, name, designation, station code, phone number..." 
+               oninput="onSearchChange()">
+      </div>
+      <div class="filter-count" id="filterStatus">Loading datasets...</div>
+    </div>
+
+    <!-- Tab 1: Kharsia Crew Master -->
+    <section id="tab-crew" class="tab-content">
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Crew ID</th>
+              <th>Name</th>
+              <th>Designation</th>
+              <th>Category</th>
+              <th>Cadre</th>
+            </tr>
+          </thead>
+          <tbody id="crewTableBody">
+            <tr><td colspan="5" class="empty-state">Loading Kharsia Crew dataset...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Tab 2: SECR Stations -->
+    <section id="tab-stations" class="tab-content" style="display: none;">
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>S.No</th>
+              <th>Code</th>
+              <th>Station Name</th>
+              <th>CUG Mobile</th>
+              <th>Landline</th>
+              <th>Section / Division</th>
+            </tr>
+          </thead>
+          <tbody id="stationsTableBody">
+            <tr><td colspan="6" class="empty-state">Loading SECR Stations dataset...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Tab 3: Grouped Lobbies Directory -->
+    <section id="tab-directory" class="tab-content" style="display: none;">
+      <div id="directoryContainer">
+        <div class="empty-state">Loading Lobbies Directory dataset...</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
       <p>South East Central Railway (SECR) • Bilaspur Division • Kharsia Combined Lobby</p>
-      <p style="margin-top: 0.35rem;">Internal Railway Operations Portal</p>
-    </footer>
-  </div>
+      <p style="margin-top: 0.4rem;">
+        Automated via <a href="https://github.com/abhishekused/Newapk/actions" target="_blank">GitHub Actions</a> • 
+        App Repository: <a href="https://github.com/abhishekused/Newapk" target="_blank">abhishekused/Newapk</a>
+      </p>
+    </div>
+  </footer>
 
-  <!-- Dynamic Release Resolver Script -->
+  <!-- Application Logic -->
   <script>
-    (function checkLatestRelease() {
-      // Direct build #4 asset link as primary default
-      const defaultDownloadUrl = "https://github.com/abhishekused/Newapk/releases/download/debug-apk-build-4-1/Newapk-debug-build-4.apk";
-      const downloadBtn = document.getElementById("downloadBtn");
-      const releaseTag = document.getElementById("releaseTag");
+    // GitHub Repo Configuration
+    const GITHUB_OWNER = 'abhishekused';
+    const GITHUB_REPO = 'Newapk';
+    const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest`;
 
-      // Attempt to query GitHub Releases API for any newer release dynamically
-      fetch("https://api.github.com/repos/abhishekused/Newapk/releases/latest")
-        .then(response => {
-          if (!response.ok) throw new Error("Network response was not ok");
-          return response.json();
-        })
-        .then(data => {
-          if (data && data.assets && data.assets.length > 0) {
-            const apkAsset = data.assets.find(a => a.name.endsWith(".apk"));
-            if (apkAsset && apkAsset.browser_download_url) {
-              downloadBtn.href = apkAsset.browser_download_url;
-              releaseTag.textContent = data.name || data.tag_name || "Latest Release";
-            }
+    // Data stores
+    let crewData = [];
+    let stationsData = [];
+    let directoryData = { lobbies: [] };
+    let currentTab = 'crew';
+
+    // Format phone numbers into clickable tel: links
+    function formatPhone(phone) {
+      if (!phone || String(phone).trim() === '') return '<span style="color:var(--text-dim);">-</span>';
+      const clean = String(phone).replace(/[^0-9+]/g, '');
+      if (clean.length < 5) return String(phone);
+      return `<a href="tel:${clean}" class="tel-link">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+        </svg>
+        ${phone}
+      </a>`;
+    }
+
+    // Tab switcher
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(section => section.style.display = 'none');
+
+      document.getElementById(`tab-btn-${tab}`).classList.add('active');
+      document.getElementById(`tab-${tab}`).style.display = 'block';
+
+      // Re-apply search filter
+      renderActiveTab();
+    }
+
+    function onSearchChange() {
+      renderActiveTab();
+    }
+
+    // Render active tab according to search query
+    function renderActiveTab() {
+      const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+
+      if (currentTab === 'crew') {
+        renderCrew(q);
+      } else if (currentTab === 'stations') {
+        renderStations(q);
+      } else if (currentTab === 'directory') {
+        renderDirectory(q);
+      }
+    }
+
+    // 1. Render Crew Master Table
+    function renderCrew(query) {
+      const tbody = document.getElementById('crewTableBody');
+      const filtered = crewData.filter(item => {
+        if (!query) return true;
+        return (item.crewId && item.crewId.toLowerCase().includes(query)) ||
+               (item.name && item.name.toLowerCase().includes(query)) ||
+               (item.designation && item.designation.toLowerCase().includes(query)) ||
+               (item.category && item.category.toLowerCase().includes(query)) ||
+               (item.cadre && item.cadre.toLowerCase().includes(query));
+      });
+
+      document.getElementById('filterStatus').textContent = `Showing ${filtered.length} of ${crewData.length} crew members`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No matching crew found for "${query}"</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(c => `
+        <tr>
+          <td><span class="id-pill">${c.crewId || '-'}</span></td>
+          <td style="font-weight: 600;">${c.name || '-'}</td>
+          <td>${c.designation || '-'}</td>
+          <td><span class="tag-category">${c.category || '-'}</span></td>
+          <td style="color: var(--text-dim); font-size: 0.8rem;">${c.cadre || '-'}</td>
+        </tr>
+      `).join('');
+    }
+
+    // 2. Render SECR Stations Table
+    function renderStations(query) {
+      const tbody = document.getElementById('stationsTableBody');
+      const filtered = stationsData.filter(st => {
+        if (!query) return true;
+        return (st.code && st.code.toLowerCase().includes(query)) ||
+               (st.name && st.name.toLowerCase().includes(query)) ||
+               (st.cugMobile && String(st.cugMobile).toLowerCase().includes(query)) ||
+               (st.landline && String(st.landline).toLowerCase().includes(query)) ||
+               (st.section && st.section.toLowerCase().includes(query));
+      });
+
+      document.getElementById('filterStatus').textContent = `Showing ${filtered.length} of ${stationsData.length} stations`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No stations match "${query}"</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(st => `
+        <tr>
+          <td style="color:var(--text-dim); font-family:var(--font-mono);">${st.sNo || '-'}</td>
+          <td class="code-cell">${st.code || '-'}</td>
+          <td style="font-weight:600;">${st.name || '-'}</td>
+          <td>${formatPhone(st.cugMobile)}</td>
+          <td>${st.landline ? formatPhone(st.landline) : '<span style="color:var(--text-dim);">-</span>'}</td>
+          <td style="color:var(--text-muted); font-size: 0.82rem;">${st.section || '-'}</td>
+        </tr>
+      `).join('');
+    }
+
+    // 3. Render Grouped Lobbies Directory
+    function renderDirectory(query) {
+      const container = document.getElementById('directoryContainer');
+      const lobbies = directoryData.lobbies || [];
+      let totalVisibleContacts = 0;
+      let totalContacts = 0;
+
+      // Filter grouped structure: Lobby -> Categories -> Contacts
+      const filteredLobbies = [];
+      lobbies.forEach(lobby => {
+        const matchingCategories = [];
+        (lobby.categories || []).forEach(cat => {
+          totalContacts += (cat.contacts || []).length;
+          const matchingContacts = (cat.contacts || []).filter(c => {
+            if (!query) return true;
+            return (c.name && c.name.toLowerCase().includes(query)) ||
+                   (c.designation && c.designation.toLowerCase().includes(query)) ||
+                   (c.mobile && String(c.mobile).includes(query)) ||
+                   (c.cug && String(c.cug).includes(query)) ||
+                   (cat.category && cat.category.toLowerCase().includes(query)) ||
+                   (lobby.name && lobby.name.toLowerCase().includes(query)) ||
+                   (lobby.code && lobby.code.toLowerCase().includes(query));
+          });
+
+          if (matchingContacts.length > 0) {
+            totalVisibleContacts += matchingContacts.length;
+            matchingCategories.push({
+              category: cat.category,
+              contacts: matchingContacts
+            });
           }
-        })
-        .catch(() => {
-          // Keep primary default build #4 direct link
-          console.log("Using primary direct download link for Build #4");
         });
-    })();
+
+        if (matchingCategories.length > 0) {
+          filteredLobbies.push({
+            name: lobby.name,
+            code: lobby.code,
+            categories: matchingCategories
+          });
+        }
+      });
+
+      document.getElementById('filterStatus').textContent = `Showing ${totalVisibleContacts} contacts across ${filteredLobbies.length} lobbies`;
+
+      if (filteredLobbies.length === 0) {
+        container.innerHTML = `<div class="empty-state">No contacts found matching "${query}"</div>`;
+        return;
+      }
+
+      container.innerHTML = filteredLobbies.map(lobby => `
+        <div class="lobby-group">
+          <div class="lobby-header">
+            <div class="lobby-title">
+              <span class="code-cell" style="font-size: 1.15rem; background: var(--surface-elevated); padding: 0.2rem 0.6rem; border-radius: 6px;">${lobby.code}</span>
+              <span>${lobby.name}</span>
+            </div>
+            <div class="tag-category">${lobby.categories.length} Categories</div>
+          </div>
+          ${lobby.categories.map(cat => `
+            <div class="category-group">
+              <div class="category-header">
+                <span>📂 ${cat.category}</span>
+                <span class="tab-badge" style="font-size: 0.7rem;">${cat.contacts.length}</span>
+              </div>
+              <div class="table-container" style="margin-bottom:0;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Designation</th>
+                      <th>Mobile</th>
+                      <th>CUG</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${cat.contacts.map(c => `
+                      <tr>
+                        <td style="font-weight: 600;">${c.name || '-'}</td>
+                        <td style="color: var(--text-muted);">${c.designation || '-'}</td>
+                        <td>${formatPhone(c.mobile)}</td>
+                        <td>${c.cug ? formatPhone(c.cug) : '<span style="color:var(--text-dim);">-</span>'}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `).join('');
+    }
+
+    // Fetch JSON datasets from data/ folder
+    async function loadData() {
+      // 1. Load Kharsia Crew Master
+      try {
+        const res = await fetch('data/kharsia_crew_master.json');
+        if (res.ok) {
+          crewData = await res.json();
+          document.getElementById('count-crew').textContent = crewData.length;
+        }
+      } catch (e) {
+        console.warn('Could not load kharsia_crew_master.json', e);
+      }
+
+      // 2. Load SECR Stations
+      try {
+        const res = await fetch('data/secr_stations.json');
+        if (res.ok) {
+          const json = await res.json();
+          stationsData = json.stations || json || [];
+          document.getElementById('count-stations').textContent = stationsData.length;
+        }
+      } catch (e) {
+        console.warn('Could not load secr_stations.json', e);
+      }
+
+      // 3. Load Directory
+      try {
+        const res = await fetch('data/kharsia_directory.json');
+        if (res.ok) {
+          directoryData = await res.json();
+          let count = 0;
+          (directoryData.lobbies || []).forEach(l => {
+            (l.categories || []).forEach(c => {
+              count += (c.contacts || []).length;
+            });
+          });
+          document.getElementById('count-directory').textContent = `${directoryData.lobbies?.length || 0} Lobbies (${count})`;
+        }
+      } catch (e) {
+        console.warn('Could not load kharsia_directory.json', e);
+      }
+
+      // 4. Load Version if present
+      try {
+        const res = await fetch('data/version.json');
+        if (res.ok) {
+          const v = await res.json();
+          if (v.version) {
+            document.getElementById('versionTag').textContent = `v${v.version}`;
+          }
+        }
+      } catch (_) {}
+
+      // Render initial view
+      renderActiveTab();
+    }
+
+    // Resolve GitHub Release Info Dynamically
+    async function fetchLatestRelease() {
+      const downloadBtn = document.getElementById('downloadBtn');
+      const versionTag = document.getElementById('versionTag');
+
+      try {
+        const res = await fetch(GITHUB_API_URL);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const release = await res.json();
+
+        if (release && release.tag_name) {
+          versionTag.textContent = release.tag_name;
+        }
+
+        // Look for .apk asset
+        if (release.assets && release.assets.length > 0) {
+          const apk = release.assets.find(a => a.name.toLowerCase().endsWith('.apk'));
+          if (apk && apk.browser_download_url) {
+            downloadBtn.href = apk.browser_download_url;
+            downloadBtn.setAttribute('download', apk.name);
+          }
+        }
+      } catch (err) {
+        console.log('Using default release fallback URL:', err.message);
+        // Fallback to releases page
+        downloadBtn.href = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/releases`;
+      }
+    }
+
+    // Init on DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', () => {
+      loadData();
+      fetchLatestRelease();
+    });
   </script>
 </body>
 </html>

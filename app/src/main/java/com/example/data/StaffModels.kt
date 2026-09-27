@@ -56,3 +56,48 @@ data class StationContact(
 data class StationResponse(
     val stations: List<StationContact> = emptyList()
 )
+
+@JsonClass(generateAdapter = true)
+data class CliContact(
+    val id: Int,
+    val name: String,
+    val restDay: String,
+    val mobile: String
+)
+
+@JsonClass(generateAdapter = true)
+data class SanderBoyContact(
+    val id: Int,
+    val shift: String,
+    val name: String,
+    val mobile: String
+)
+
+@JsonClass(generateAdapter = true)
+data class TlcContact(
+    val sNo: Int,
+    val name: String,
+    val mobile: String,
+    val designation: String = "TLC - Traction Loco Controller",
+    val division: String = "Bilaspur (BSP)"
+)
+
+@JsonClass(generateAdapter = true)
+data class LobbyCccContact(
+    val lobbyCode: String,
+    val name: String,
+    val designation: String,
+    val mobile: String
+)
+
+@JsonClass(generateAdapter = true)
+data class KharsiaStaffItem(
+    val id: String,
+    val name: String,
+    val role: String,
+    val category: String, // "LPG", "TM", "ALP", "CLI", "JEEP DRIVER", "SANDER BOY", "CCC"
+    val subDetail: String = "",
+    val mobile: String,
+    val altMobile: String = "",
+    val badge: String = ""
+)

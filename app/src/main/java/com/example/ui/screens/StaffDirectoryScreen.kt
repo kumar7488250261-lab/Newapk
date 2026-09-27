@@ -3,11 +3,9 @@ package com.example.ui.screens
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,22 +20,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Emergency
-import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.PhoneInTalk
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material.icons.filled.Train
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -65,17 +63,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.data.CrewMember
+import com.example.data.KharsiaStaffItem
 import com.example.data.Lobby
 import com.example.data.StaffContact
 import com.example.data.StaffRepository
 import com.example.data.StationContact
+import com.example.data.TlcContact
 import com.example.ui.components.KharsiaLobbyEmblem
 import com.example.ui.theme.DarkBackgroundNavy
 import com.example.ui.theme.DarkBorderBlue
@@ -104,26 +104,76 @@ fun StaffDirectoryScreen(
 ) {
     val context = LocalContext.current
 
-    val emergencyContacts = remember { staffRepository.getEmergencyQuickContacts() }
-    val stations = remember { staffRepository.getStations() }
-    val kharsiaLobby = remember { staffRepository.getKharsiaLobby() }
+    val kharsiaStaff = remember { staffRepository.getKharsiaStaffItems() }
     val otherLobbies = remember { staffRepository.getOtherLobbies() }
-    val controlLobby = remember { staffRepository.getControlCenterLobby() }
-    val crewMaster = remember { staffRepository.getCrewMaster() }
+    val tlcContacts = remember { staffRepository.getTlcContacts() }
+    val stations = remember { staffRepository.getStations() }
+    val divisionalControlCategories = remember { staffRepository.getDivisionalControlCategories() }
 
-    // Tabs: 0: Stations CUG (PDF), 1: Kharsia Lobby (369 Crew), 2: Other 12 Lobbies, 3: Control Center & Landlines
+    // Tabs: 0: Kharsia Lobby, 1: Other Lobbies, 2: TLC, 3: Stations CUG (141), 4: Divisional Control
     var selectedTab by remember { mutableIntStateOf(0) }
     var searchQuery by remember { mutableStateOf("") }
 
-    // Station section filter
+    // Kharsia Category Filter: "ALL", "LPG", "TM", "ALP", "CLI", "JEEP DRIVER", "SANDER BOY", "CCC"
+    var kharsiaCategoryFilter by remember { mutableStateOf("ALL") }
+
+    // Station Section Filter
     var stationSectionFilter by remember { mutableStateOf("ALL") }
-    // Kharsia crew category filter
-    var crewCategoryFilter by remember { mutableIntStateOf(0) } // 0: ALL, 1: LP, 2: ALP
 
-    // Emergency strip expansion state
-    var showEmergencyStrip by remember { mutableStateOf(true) }
+    // Divisional Control Category Filter
+    var divisionalFilter by remember { mutableStateOf("ALL") }
 
-    // Filtered Stations (141)
+    // Filtered Kharsia Staff
+    val filteredKharsiaStaff = remember(searchQuery, kharsiaCategoryFilter, kharsiaStaff) {
+        kharsiaStaff.filter { item ->
+            val matchesCategory = when (kharsiaCategoryFilter) {
+                "ALL" -> true
+                else -> item.category.equals(kharsiaCategoryFilter, ignoreCase = true)
+            }
+            val matchesQuery = if (searchQuery.isBlank()) true else {
+                val q = searchQuery.trim().uppercase()
+                item.name.uppercase().contains(q) ||
+                item.id.uppercase().contains(q) ||
+                item.badge.uppercase().contains(q) ||
+                item.role.uppercase().contains(q) ||
+                item.mobile.contains(q) ||
+                item.altMobile.contains(q) ||
+                item.category.uppercase().contains(q)
+            }
+            matchesCategory && matchesQuery
+        }
+    }
+
+    // Filtered Other Lobbies
+    val filteredOtherLobbies = remember(searchQuery, otherLobbies) {
+        if (searchQuery.isBlank()) otherLobbies
+        else otherLobbies.filter {
+            it.name.contains(searchQuery, ignoreCase = true) ||
+            it.code.contains(searchQuery, ignoreCase = true) ||
+            it.categories.any { cat ->
+                cat.contacts.any { c ->
+                    c.name.contains(searchQuery, ignoreCase = true) ||
+                    c.mobile.contains(searchQuery)
+                }
+            }
+        }
+    }
+
+    // Filtered TLC Contacts
+    val filteredTlcContacts = remember(searchQuery, tlcContacts) {
+        if (searchQuery.isBlank()) tlcContacts
+        else {
+            val q = searchQuery.trim().uppercase()
+            tlcContacts.filter {
+                it.name.uppercase().contains(q) ||
+                it.mobile.contains(q) ||
+                it.designation.uppercase().contains(q) ||
+                it.division.uppercase().contains(q)
+            }
+        }
+    }
+
+    // Filtered Stations
     val filteredStations = remember(searchQuery, stationSectionFilter, stations) {
         stations.filter { st ->
             val matchesSection = when (stationSectionFilter) {
@@ -145,46 +195,20 @@ fun StaffDirectoryScreen(
         }
     }
 
-    // Filtered Kharsia Crew (369)
-    val filteredKharsiaCrew = remember(searchQuery, crewCategoryFilter, crewMaster) {
-        crewMaster.filter { crew ->
-            val matchesCat = when (crewCategoryFilter) {
-                1 -> crew.category.equals("LP", ignoreCase = true) || crew.designation.contains("LP", ignoreCase = true)
-                2 -> crew.category.equals("ALP", ignoreCase = true) || crew.designation.contains("ALP", ignoreCase = true)
-                else -> true
-            }
-            val matchesQuery = if (searchQuery.isBlank()) true else {
-                val q = searchQuery.trim().uppercase()
-                crew.crewId.uppercase().contains(q) ||
-                crew.name.uppercase().contains(q) ||
-                crew.designation.uppercase().contains(q) ||
-                crew.mobile.contains(q)
-            }
-            matchesCat && matchesQuery
-        }
-    }
-
-    // Filtered Other Lobbies
-    val filteredOtherLobbies = remember(searchQuery, otherLobbies) {
-        if (searchQuery.isBlank()) otherLobbies
-        else otherLobbies.filter {
-            it.name.contains(searchQuery, ignoreCase = true) ||
-            it.code.contains(searchQuery, ignoreCase = true)
-        }
-    }
-
-    // Filtered Control Contacts
-    val filteredControlContacts = remember(searchQuery, controlLobby) {
-        val allContacts = mutableListOf<Pair<String, StaffContact>>()
-        controlLobby?.categories?.forEach { cat ->
-            cat.contacts.forEach { c ->
-                allContacts.add(Pair(cat.category, c))
+    // Filtered Divisional Contacts
+    val filteredDivisionalContacts = remember(searchQuery, divisionalFilter, divisionalControlCategories) {
+        val all = mutableListOf<Pair<String, StaffContact>>()
+        divisionalControlCategories.forEach { cat ->
+            if (divisionalFilter == "ALL" || cat.category == divisionalFilter) {
+                cat.contacts.forEach { c ->
+                    all.add(Pair(cat.category, c))
+                }
             }
         }
-        if (searchQuery.isBlank()) allContacts
+        if (searchQuery.isBlank()) all
         else {
             val q = searchQuery.trim().uppercase()
-            allContacts.filter { (cat, c) ->
+            all.filter { (cat, c) ->
                 cat.uppercase().contains(q) ||
                 c.name.uppercase().contains(q) ||
                 c.designation.uppercase().contains(q) ||
@@ -202,13 +226,13 @@ fun StaffDirectoryScreen(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "SECR Operational Directory",
+                                text = "Staff Directory (स्टाफ डायरेक्टरी)",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                             Text(
-                                text = "141 Stations • Kharsia Lobby • Control Center",
+                                text = "Kharsia Lobby • Other Lobbies • TLC • Stations",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = RailwayGold
                             )
@@ -227,15 +251,6 @@ fun StaffDirectoryScreen(
                         )
                     }
                 },
-                actions = {
-                    IconButton(onClick = { showEmergencyStrip = !showEmergencyStrip }) {
-                        Icon(
-                            imageVector = Icons.Default.Emergency,
-                            contentDescription = "Toggle Emergency",
-                            tint = if (showEmergencyStrip) RailwayRed else Color.LightGray
-                        )
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBackgroundNavy)
             )
         },
@@ -246,72 +261,7 @@ fun StaffDirectoryScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // =========================================================================
-            // 1. TOP EMERGENCY & CONTROL CENTER QUICK DIAL SECTION (ALWAYS AT THE TOP)
-            // =========================================================================
-            AnimatedVisibility(visible = showEmergencyStrip) {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF140D1B)),
-                    shape = RoundedCornerShape(0.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.dp, Color(0xFFDC2626).copy(alpha = 0.4f))
-                ) {
-                    Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .clip(CircleShape)
-                                        .background(RailwayRed)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "CONTROL CENTER & EMERGENCY HELPLINES (आपातकालीन नंबर)",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFFFCA5A5),
-                                    letterSpacing = 0.5.sp
-                                )
-                            }
-                            Text(
-                                text = "1-TAP CALL",
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = RailwayGold
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        // Fast scroll horizontal cards
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            emergencyContacts.forEach { contact ->
-                                EmergencyQuickChip(
-                                    title = contact.name,
-                                    phone = contact.mobile,
-                                    role = contact.designation,
-                                    onCall = { dialPhoneNumber(context, contact.mobile) }
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // =========================================================================
-            // 2. SEARCH BAR
-            // =========================================================================
+            // SEARCH BAR
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -322,12 +272,13 @@ fun StaffDirectoryScreen(
                     onValueChange = { searchQuery = it },
                     placeholder = {
                         val placeholder = when (selectedTab) {
-                            0 -> "Search Station Code (KHS, RIG, BSP) or Name..."
-                            1 -> "Search Crew Name or CMS ID (e.g. KHS1001)..."
-                            2 -> "Search Lobby Name or Code (BSP, KRBA)..."
-                            else -> "Search TLC, TPC, Power Controller, DPC..."
+                            0 -> "Search Kharsia Staff (Name, ID e.g. KHS1001, Driver, Mobile)..."
+                            1 -> "Search Other Lobbies (BSP, RIG, KRBA, SDL)..."
+                            2 -> "Search TLC Controller by Name or Mobile..."
+                            3 -> "Search Station Code (KHS, RIG, BSP) or Name..."
+                            else -> "Search Officers, TPC, DPC, Test Room..."
                         }
-                        Text(placeholder, color = Color(0xFF7E8EA6), fontSize = 13.sp)
+                        Text(placeholder, color = Color(0xFF7E8EA6), fontSize = 12.5.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     },
                     leadingIcon = {
                         Icon(
@@ -359,9 +310,8 @@ fun StaffDirectoryScreen(
                 )
             }
 
-            // =========================================================================
-            // 3. MAIN SECTION TABS
-            // =========================================================================
+            // MAIN NAVIGATION TABS
+            // Kharsia Lobby | Other Lobbies | TLC | Stations CUG | Divisional Control
             ScrollableTabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = DarkSurfaceNavy,
@@ -382,7 +332,7 @@ fun StaffDirectoryScreen(
                     },
                     text = {
                         Text(
-                            "Stations CUG (141)",
+                            "Kharsia Lobby (${kharsiaStaff.size})",
                             fontWeight = FontWeight.Bold,
                             color = if (selectedTab == 0) RailwayGold else Color.White,
                             fontSize = 13.sp
@@ -397,7 +347,7 @@ fun StaffDirectoryScreen(
                     },
                     text = {
                         Text(
-                            "Kharsia Lobby (369)",
+                            "Other Lobbies (${otherLobbies.size})",
                             fontWeight = FontWeight.Bold,
                             color = if (selectedTab == 1) RailwayGold else Color.White,
                             fontSize = 13.sp
@@ -412,7 +362,7 @@ fun StaffDirectoryScreen(
                     },
                     text = {
                         Text(
-                            "Other Lobbies (${otherLobbies.size})",
+                            "TLC (${tlcContacts.size})",
                             fontWeight = FontWeight.Bold,
                             color = if (selectedTab == 2) RailwayGold else Color.White,
                             fontSize = 13.sp
@@ -427,43 +377,64 @@ fun StaffDirectoryScreen(
                     },
                     text = {
                         Text(
-                            "Control Center",
+                            "Stations CUG (${stations.size})",
                             fontWeight = FontWeight.Bold,
                             color = if (selectedTab == 3) RailwayGold else Color.White,
                             fontSize = 13.sp
                         )
                     }
                 )
+                Tab(
+                    selected = selectedTab == 4,
+                    onClick = {
+                        selectedTab = 4
+                        searchQuery = ""
+                    },
+                    text = {
+                        Text(
+                            "Divisional Control",
+                            fontWeight = FontWeight.Bold,
+                            color = if (selectedTab == 4) RailwayGold else Color.White,
+                            fontSize = 13.sp
+                        )
+                    }
+                )
             }
 
-            // =========================================================================
-            // 4. TAB CONTENTS
-            // =========================================================================
+            // TAB CONTENT VIEWS
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 14.dp, vertical = 6.dp)
             ) {
                 when (selectedTab) {
-                    0 -> StationsTabView(
+                    0 -> KharsiaLobbyTabView(
+                        staffList = filteredKharsiaStaff,
+                        allStaff = kharsiaStaff,
+                        currentCategory = kharsiaCategoryFilter,
+                        onCategoryChange = { kharsiaCategoryFilter = it },
+                        onCall = { phone -> dialPhoneNumber(context, phone) }
+                    )
+                    1 -> OtherLobbiesTabView(
+                        lobbies = filteredOtherLobbies,
+                        onLobbyClick = onLobbyClick,
+                        onCall = { phone -> dialPhoneNumber(context, phone) }
+                    )
+                    2 -> TlcTabView(
+                        tlcList = filteredTlcContacts,
+                        onCall = { phone -> dialPhoneNumber(context, phone) }
+                    )
+                    3 -> StationsTabView(
                         stations = filteredStations,
                         currentFilter = stationSectionFilter,
                         onFilterChange = { stationSectionFilter = it },
                         onCall = { phone -> dialPhoneNumber(context, phone) }
                     )
-                    1 -> KharsiaLobbyTabView(
-                        crewList = filteredKharsiaCrew,
-                        kharsiaLobby = kharsiaLobby,
-                        categoryFilter = crewCategoryFilter,
-                        onCategoryFilterChange = { crewCategoryFilter = it },
-                        onCall = { phone -> dialPhoneNumber(context, phone) }
-                    )
-                    2 -> OtherLobbiesTabView(
-                        lobbies = filteredOtherLobbies,
-                        onLobbyClick = onLobbyClick
-                    )
-                    3 -> ControlCenterTabView(
-                        contacts = filteredControlContacts,
+                    4 -> DivisionalControlTabView(
+                        categories = divisionalControlCategories,
+                        filteredContacts = filteredDivisionalContacts,
+                        currentFilter = divisionalFilter,
+                        onFilterChange = { divisionalFilter = it },
                         onCall = { phone -> dialPhoneNumber(context, phone) }
                     )
                 }
@@ -473,64 +444,574 @@ fun StaffDirectoryScreen(
 }
 
 // =============================================================================
-// SUB-COMPONENTS & TAB VIEWS
+// TAB 0: KHARSIA LOBBY DEDICATED VIEW (CATEGORIES WISE: LPG, TM, ALP, CLI, JEEP DRIVER, SANDER BOY, CCC)
 // =============================================================================
+@Composable
+private fun KharsiaLobbyTabView(
+    staffList: List<KharsiaStaffItem>,
+    allStaff: List<KharsiaStaffItem>,
+    currentCategory: String,
+    onCategoryChange: (String) -> Unit,
+    onCall: (String) -> Unit
+) {
+    // Counts per category
+    val countAll = allStaff.size
+    val countLpg = remember(allStaff) { allStaff.count { it.category == "LPG" } }
+    val countTm = remember(allStaff) { allStaff.count { it.category == "TM" } }
+    val countAlp = remember(allStaff) { allStaff.count { it.category == "ALP" } }
+    val countCli = remember(allStaff) { allStaff.count { it.category == "CLI" } }
+    val countDriver = remember(allStaff) { allStaff.count { it.category == "JEEP DRIVER" } }
+    val countSander = remember(allStaff) { allStaff.count { it.category == "SANDER BOY" } }
+    val countCcc = remember(allStaff) { allStaff.count { it.category == "CCC" } }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Kharsia Lobby Header Info Card
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2E48)),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.2.dp, RailwayGold, RoundedCornerShape(12.dp))
+        ) {
+            Row(
+                modifier = Modifier.padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                KharsiaLobbyEmblem(size = 46.dp)
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "खरसिया कंबाइंड लॉबी • KHARSIA LOBBY",
+                        fontWeight = FontWeight.Bold,
+                        color = RailwayGold,
+                        fontSize = 13.5.sp
+                    )
+                    Text(
+                        text = "425 Running Staff & Supervisors • 24x7 Operations",
+                        fontSize = 11.sp,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "Desk: 07766-276100 • CCC: 9752442786 • Station: 9752090650",
+                        fontSize = 10.sp,
+                        color = Color(0xFF93C5FD)
+                    )
+                }
+                IconButton(
+                    onClick = { onCall("07766276100") },
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(RailwayGold)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Call,
+                        contentDescription = "Call Kharsia Lobby",
+                        tint = Color(0xFF0F1E36),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // CATEGORY WISE SELECTOR
+        // LPG, TM (right beside LPG), ALP, CLI, JEEP DRIVER, SANDER BOY, CCC
+        val categories = listOf(
+            "ALL" to "All ($countAll)",
+            "LPG" to "LPG ($countLpg)",
+            "TM" to "TM / Guard ($countTm)",
+            "ALP" to "ALP / SALP ($countAlp)",
+            "CLI" to "CLI ($countCli)",
+            "JEEP DRIVER" to "Jeep Driver ($countDriver)",
+            "SANDER BOY" to "Sander Boy ($countSander)",
+            "CCC" to "CCC / CC ($countCcc)"
+        )
+
+        ScrollableTabRow(
+            selectedTabIndex = categories.indexOfFirst { it.first == currentCategory }.coerceAtLeast(0),
+            containerColor = Color.Transparent,
+            contentColor = RailwayGold,
+            edgePadding = 0.dp,
+            indicator = {},
+            divider = {}
+        ) {
+            categories.forEach { (catKey, label) ->
+                val isSelected = currentCategory == catKey
+                Box(
+                    modifier = Modifier
+                        .padding(end = 6.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isSelected) RailwayGold else DarkSurfaceNavy)
+                        .border(
+                            1.dp,
+                            if (isSelected) RailwayGold else DarkBorderBlue,
+                            RoundedCornerShape(8.dp)
+                        )
+                        .clickable { onCategoryChange(catKey) }
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = label,
+                        color = if (isSelected) Color(0xFF0F1E36) else Color.White,
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = "Showing ${staffList.size} Kharsia Staff members in $currentCategory:",
+            fontSize = 11.5.sp,
+            color = Color(0xFFA0B4D0)
+        )
+
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(vertical = 6.dp)
+        ) {
+            items(staffList, key = { "${it.category}_${it.id}_${it.name}" }) { item ->
+                KharsiaStaffCard(item = item, onCall = onCall)
+            }
+        }
+    }
+}
 
 @Composable
-private fun EmergencyQuickChip(
-    title: String,
-    phone: String,
-    role: String,
-    onCall: () -> Unit
+private fun KharsiaStaffCard(
+    item: KharsiaStaffItem,
+    onCall: (String) -> Unit
 ) {
+    // Category distinct badge icon and gradient
+    val (icon, gradient, badgeColor) = when (item.category) {
+        "LPG" -> Triple(
+            Icons.Default.Train,
+            Brush.verticalGradient(listOf(Color(0xFF1E3A8A), Color(0xFF2563EB))),
+            Color(0xFF60A5FA)
+        )
+        "TM" -> Triple(
+            Icons.Default.Train,
+            Brush.verticalGradient(listOf(Color(0xFF065F46), Color(0xFF059669))),
+            Color(0xFF34D399)
+        )
+        "ALP" -> Triple(
+            Icons.Default.Person,
+            Brush.verticalGradient(listOf(Color(0xFF0E7490), Color(0xFF0891B2))),
+            Color(0xFF38BDF8)
+        )
+        "CLI" -> Triple(
+            Icons.Default.Security,
+            Brush.verticalGradient(listOf(Color(0xFF5B21B6), Color(0xFF7C3AED))),
+            Color(0xFFA78BFA)
+        )
+        "JEEP DRIVER" -> Triple(
+            Icons.Default.DirectionsCar,
+            Brush.verticalGradient(listOf(Color(0xFF9A3412), Color(0xFFEA580C))),
+            Color(0xFFFB923C)
+        )
+        "SANDER BOY" -> Triple(
+            Icons.Default.Build,
+            Brush.verticalGradient(listOf(Color(0xFF0F766E), Color(0xFF0D9488))),
+            Color(0xFF2DD4BF)
+        )
+        else -> Triple(
+            Icons.Default.SupportAgent,
+            Brush.verticalGradient(listOf(Color(0xFF991B1B), Color(0xFFDC2626))),
+            Color(0xFFF87171)
+        )
+    }
+
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-        shape = RoundedCornerShape(10.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkSurfaceNavy),
+        shape = RoundedCornerShape(12.dp),
         modifier = Modifier
-            .border(1.dp, Color(0xFFEF4444).copy(alpha = 0.5f), RoundedCornerShape(10.dp))
-            .clickable { onCall() }
+            .fillMaxWidth()
+            .border(1.dp, DarkBorderBlue, RoundedCornerShape(12.dp))
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Category Icon Badge
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(gradient),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = item.name,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        fontSize = 13.5.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(badgeColor.copy(alpha = 0.2f))
+                            .border(0.8.dp, badgeColor.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = item.badge.ifBlank { item.category },
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = badgeColor
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Text(
+                    text = item.role,
+                    fontSize = 11.5.sp,
+                    color = Color(0xFFA0B4D0)
+                )
+
+                if (item.subDetail.isNotBlank()) {
+                    Text(
+                        text = item.subDetail,
+                        fontSize = 10.5.sp,
+                        color = Color(0xFF93C5FD)
+                    )
+                }
+
+                if (item.mobile.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(3.dp))
+                    Text(
+                        text = "Phone: ${item.mobile}",
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = RailwayGreen
+                    )
+                }
+            }
+
+            // Call Action Buttons
+            if (item.mobile.isNotBlank()) {
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(
+                    onClick = { onCall(item.mobile) },
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(RailwayGreen.copy(alpha = 0.2f))
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Phone,
+                        contentDescription = "Call",
+                        tint = RailwayGreen,
+                        modifier = Modifier.size(19.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+// =============================================================================
+// TAB 1: OTHER LOBBIES (SECR BILASPUR DIVISION WITH LOBBY CCC INCLUDED)
+// =============================================================================
+@Composable
+private fun OtherLobbiesTabView(
+    lobbies: List<Lobby>,
+    onLobbyClick: (Lobby) -> Unit,
+    onCall: (String) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text(
+            text = "SECR Bilaspur Division Lobbies (${lobbies.size}) • With Chief Crew Controllers:",
+            fontSize = 11.5.sp,
+            color = Color(0xFFA0B4D0),
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
+
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(vertical = 6.dp)
+        ) {
+            items(lobbies, key = { it.code }) { lobby ->
+                val cccCategory = lobby.categories.find { it.category.contains("CCC", ignoreCase = true) }
+                val firstCcc = cccCategory?.contacts?.firstOrNull()
+
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = DarkSurfaceNavy),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, DarkBorderBlue, RoundedCornerShape(12.dp))
+                        .clickable { onLobbyClick(lobby) }
+                        .testTag("lobby_item_${lobby.code}")
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(46.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(RailwayNavy),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = lobby.code,
+                                color = RailwayGold,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = lobby.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                fontSize = 14.sp
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "${lobby.totalContacts} Contacts • ${lobby.categories.size} Categories",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFFA0B4D0)
+                            )
+                            if (firstCcc != null) {
+                                Spacer(modifier = Modifier.height(3.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(Color(0xFF991B1B).copy(alpha = 0.3f))
+                                            .padding(horizontal = 4.dp, vertical = 1.dp)
+                                    ) {
+                                        Text(
+                                            text = "CCC",
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFFFCA5A5)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "${firstCcc.name} • ${firstCcc.mobile}",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = RailwayGreen
+                                    )
+                                }
+                            }
+                        }
+
+                        if (firstCcc != null) {
+                            IconButton(
+                                onClick = { onCall(firstCcc.mobile) },
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(RailwayGreen.copy(alpha = 0.2f))
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Phone,
+                                    contentDescription = "Call CCC",
+                                    tint = RailwayGreen,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = null,
+                                tint = Color(0xFF7E8EA6)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// =============================================================================
+// TAB 2: TLC (TRACTION LOCO CONTROLLERS) DEDICATED DIRECTORY (46 CONTROLLERS)
+// =============================================================================
+@Composable
+private fun TlcTabView(
+    tlcList: List<TlcContact>,
+    onCall: (String) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2838)),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, RailwayGold.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+        ) {
+            Row(
+                modifier = Modifier.padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Brush.verticalGradient(listOf(Color(0xFFB45309), Color(0xFFD97706)))),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhoneInTalk,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = "Traction Loco Controllers (TLC)",
+                        fontWeight = FontWeight.Bold,
+                        color = RailwayGold,
+                        fontSize = 13.5.sp
+                    )
+                    Text(
+                        text = "SECR Bilaspur Division • 24x7 Electric Loco Power Control",
+                        fontSize = 11.sp,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = "Active TLC Officers & Desks (${tlcList.size}):",
+            fontSize = 11.5.sp,
+            color = Color(0xFFA0B4D0)
+        )
+
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(vertical = 6.dp)
+        ) {
+            items(tlcList, key = { "${it.sNo}_${it.name}_${it.mobile}" }) { tlc ->
+                TlcCardItem(tlc = tlc, onCall = onCall)
+            }
+        }
+    }
+}
+
+@Composable
+private fun TlcCardItem(
+    tlc: TlcContact,
+    onCall: (String) -> Unit
+) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = DarkSurfaceNavy),
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, DarkBorderBlue, RoundedCornerShape(12.dp))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(28.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFDC2626)),
+                    .background(Color(0xFF1E3A8A)),
                 contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "${tlc.sNo}",
+                    fontWeight = FontWeight.Bold,
+                    color = RailwayGold,
+                    fontSize = 13.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = tlc.name,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    fontSize = 13.5.sp
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "${tlc.designation} • ${tlc.division}",
+                    fontSize = 11.sp,
+                    color = Color(0xFF93C5FD)
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "CUG: ${tlc.mobile}",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = RailwayGreen
+                )
+            }
+
+            IconButton(
+                onClick = { onCall(tlc.mobile) },
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(CircleShape)
+                    .background(RailwayGreen.copy(alpha = 0.2f))
             ) {
                 Icon(
                     imageVector = Icons.Default.Phone,
-                    contentDescription = "Call",
-                    tint = Color.White,
-                    modifier = Modifier.size(15.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text(
-                    text = title,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 11.5.sp,
-                    color = Color.White,
-                    maxLines = 1
-                )
-                Text(
-                    text = phone,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 10.sp,
-                    color = RailwayGold
+                    contentDescription = "Call TLC",
+                    tint = RailwayGreen,
+                    modifier = Modifier.size(19.dp)
                 )
             }
         }
     }
 }
 
-// -----------------------------------------------------------------------------
-// TAB 0: STATIONS CUG (141 STATIONS FROM PDF)
-// -----------------------------------------------------------------------------
+// =============================================================================
+// TAB 3: STATIONS CUG DIRECTORY (141 STATIONS)
+// =============================================================================
 @Composable
 private fun StationsTabView(
     stations: List<StationContact>,
@@ -539,13 +1020,21 @@ private fun StationsTabView(
     onCall: (String) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        // Section Filter Chips
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        // Horizontal scroll section chips
+        ScrollableTabRow(
+            selectedTabIndex = when (currentFilter) {
+                "SEC1" -> 1
+                "SEC2" -> 2
+                "SEC3" -> 3
+                "SEC4" -> 4
+                "SEC5" -> 5
+                else -> 0
+            },
+            containerColor = Color.Transparent,
+            contentColor = RailwayGold,
+            edgePadding = 0.dp,
+            indicator = {},
+            divider = {}
         ) {
             val chips = listOf(
                 "ALL" to "All (141)",
@@ -559,6 +1048,7 @@ private fun StationsTabView(
                 val isSelected = currentFilter == key
                 Box(
                     modifier = Modifier
+                        .padding(end = 6.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(if (isSelected) RailwayGold else DarkSurfaceNavy)
                         .border(1.dp, if (isSelected) RailwayGold else DarkBorderBlue, RoundedCornerShape(8.dp))
@@ -705,7 +1195,6 @@ private fun StationCardItem(
 
             // Action Call Buttons
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                // Call CUG
                 IconButton(
                     onClick = { onCall(station.cugMobile) },
                     modifier = Modifier
@@ -721,7 +1210,6 @@ private fun StationCardItem(
                     )
                 }
 
-                // Call Landline if available
                 if (station.landline.isNotBlank()) {
                     IconButton(
                         onClick = { onCall(station.landline) },
@@ -743,319 +1231,69 @@ private fun StationCardItem(
     }
 }
 
-// -----------------------------------------------------------------------------
-// TAB 1: KHARSIA LOBBY DEDICATED VIEW (369 RUNNING STAFF & SUPERVISORS)
-// -----------------------------------------------------------------------------
+// =============================================================================
+// TAB 4: DIVISIONAL CONTROL & OFFICERS
+// =============================================================================
 @Composable
-private fun KharsiaLobbyTabView(
-    crewList: List<CrewMember>,
-    kharsiaLobby: Lobby?,
-    categoryFilter: Int,
-    onCategoryFilterChange: (Int) -> Unit,
+private fun DivisionalControlTabView(
+    categories: List<com.example.data.LobbyCategory>,
+    filteredContacts: List<Pair<String, StaffContact>>,
+    currentFilter: String,
+    onFilterChange: (String) -> Unit,
     onCall: (String) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        // Kharsia Lobby Header Info Card
-        Card(
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2E48)),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.2.dp, RailwayGold, RoundedCornerShape(12.dp))
+        // Category Filters for Divisional Control
+        ScrollableTabRow(
+            selectedTabIndex = when (currentFilter) {
+                "Divisional Officers" -> 1
+                "Power & Movement Control" -> 2
+                "DPC Contacts" -> 3
+                "Lobby Emergency Landlines" -> 4
+                else -> 0
+            },
+            containerColor = Color.Transparent,
+            contentColor = RailwayGold,
+            edgePadding = 0.dp,
+            indicator = {},
+            divider = {}
         ) {
-            Row(
-                modifier = Modifier.padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                KharsiaLobbyEmblem(size = 48.dp)
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "खरसिया कंबाइंड लॉबी • KHARSIA LOBBY",
-                        fontWeight = FontWeight.Bold,
-                        color = RailwayGold,
-                        fontSize = 13.5.sp
-                    )
-                    Text(
-                        text = "369 Active Running Staff (Loco Pilots & ALPs) • 24x7 Operations",
-                        fontSize = 11.sp,
-                        color = Color.White
-                    )
-                    Text(
-                        text = "Lobby Master Landline: 07766-276100 • Station CUG: 9752090650",
-                        fontSize = 10.sp,
-                        color = Color(0xFF93C5FD)
-                    )
-                }
-                IconButton(
-                    onClick = { onCall("07766276100") },
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(RailwayGold)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Call,
-                        contentDescription = "Call Kharsia Lobby",
-                        tint = Color(0xFF0F1E36),
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Category filter chips
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            listOf("ALL (369)", "LP Goods", "ALP / SALP").forEachIndexed { idx, label ->
-                val isSelected = categoryFilter == idx
+            val chips = listOf("ALL" to "All") + categories.map { it.category to it.category }
+            chips.forEach { (key, label) ->
+                val isSelected = currentFilter == key
                 Box(
                     modifier = Modifier
+                        .padding(end = 6.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(if (isSelected) RailwayGold else DarkSurfaceNavy)
                         .border(1.dp, if (isSelected) RailwayGold else DarkBorderBlue, RoundedCornerShape(8.dp))
-                        .clickable { onCategoryFilterChange(idx) }
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .clickable { onFilterChange(key) }
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     Text(
                         text = label,
                         color = if (isSelected) Color(0xFF0F1E36) else Color.White,
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         Text(
-            text = "Showing ${crewList.size} Kharsia Crew Members:",
-            fontSize = 11.5.sp,
-            color = Color(0xFFA0B4D0)
-        )
-
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(vertical = 6.dp)
-        ) {
-            items(crewList, key = { it.crewId }) { crew ->
-                KharsiaCrewCard(crew = crew, onCall = onCall)
-            }
-        }
-    }
-}
-
-@Composable
-private fun KharsiaCrewCard(
-    crew: CrewMember,
-    onCall: (String) -> Unit
-) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceNavy),
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, DarkBorderBlue, RoundedCornerShape(12.dp))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(CircleShape)
-                    .background(RailwayNavy),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    tint = RailwayGold,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = crew.name,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        fontSize = 13.5.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(RailwayGold.copy(alpha = 0.2f))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = crew.crewId,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = RailwayGold
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(2.dp))
-
-                Text(
-                    text = "${crew.designation} • ${crew.cadre}",
-                    fontSize = 11.5.sp,
-                    color = Color(0xFFA0B4D0)
-                )
-
-                if (crew.mobile.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "CUG / Mobile: ${crew.mobile}",
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = RailwayGreen
-                    )
-                }
-            }
-
-            if (crew.mobile.isNotBlank()) {
-                Spacer(modifier = Modifier.width(8.dp))
-                IconButton(
-                    onClick = { onCall(crew.mobile) },
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(RailwayGreen.copy(alpha = 0.2f))
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Phone,
-                        contentDescription = "Call",
-                        tint = RailwayGreen,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-// -----------------------------------------------------------------------------
-// TAB 2: OTHER 12 LOBBIES (BSP, RIG, KRBA, SDL, etc.)
-// -----------------------------------------------------------------------------
-@Composable
-private fun OtherLobbiesTabView(
-    lobbies: List<Lobby>,
-    onLobbyClick: (Lobby) -> Unit
-) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        Text(
-            text = "SECR Bilaspur Division Lobbies (${lobbies.size}):",
+            text = "Divisional Officers & Control Center (${filteredContacts.size}):",
             fontSize = 11.5.sp,
             color = Color(0xFFA0B4D0),
-            modifier = Modifier.padding(vertical = 4.dp)
+            modifier = Modifier.padding(vertical = 2.dp)
         )
 
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(vertical = 6.dp)
         ) {
-            items(lobbies, key = { it.code }) { lobby ->
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = DarkSurfaceNavy),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.dp, DarkBorderBlue, RoundedCornerShape(12.dp))
-                        .clickable { onLobbyClick(lobby) }
-                        .testTag("lobby_item_${lobby.code}")
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(RailwayNavy),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = lobby.code,
-                                color = RailwayGold,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = lobby.name,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                fontSize = 14.sp
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "${lobby.totalContacts} Contacts • ${lobby.categories.size} Sections",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFFA0B4D0)
-                            )
-                        }
-
-                        Icon(
-                            imageVector = Icons.Default.ChevronRight,
-                            contentDescription = null,
-                            tint = Color(0xFF7E8EA6)
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-// -----------------------------------------------------------------------------
-// TAB 3: CONTROL CENTER (FULL DIRECTORY: TLC, TPC, CCC, SSE, DPC)
-// -----------------------------------------------------------------------------
-@Composable
-private fun ControlCenterTabView(
-    contacts: List<Pair<String, StaffContact>>,
-    onCall: (String) -> Unit
-) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        Text(
-            text = "SECR Divisional Control Center & Departmental Helplines (${contacts.size}):",
-            fontSize = 11.5.sp,
-            color = Color(0xFFA0B4D0),
-            modifier = Modifier.padding(vertical = 4.dp)
-        )
-
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(vertical = 6.dp)
-        ) {
-            items(contacts, key = { "${it.first}_${it.second.name}_${it.second.mobile}" }) { (dept, contact) ->
+            items(filteredContacts, key = { "${it.first}_${it.second.name}_${it.second.mobile}" }) { (dept, contact) ->
                 Card(
                     colors = CardDefaults.cardColors(containerColor = DarkSurfaceNavy),
                     shape = RoundedCornerShape(12.dp),

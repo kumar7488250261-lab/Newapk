@@ -102,28 +102,29 @@ The optimized production files will be output to `web/dist/`.
 
 ---
 
-## 🚀 GitHub Actions Automated CI/CD
+## 🚀 GitHub Actions CI/CD & Automated Companion Website
 
-The repository includes two automated GitHub Actions workflows:
+The repository includes automated GitHub Actions workflows:
 
-### 1. Android APK Build & GitHub Release (`.github/workflows/build-apk.yml`)
-- Triggers automatically when changes are pushed to `main` or triggered manually via `workflow_dispatch`.
-- Builds the debug APK using Gradle and Java 17.
-- Uploads the APK as an artifact (`app-debug-apk`).
-- Automatically creates a GitHub Release with direct `.apk` phone download links.
+### Automated APK Build, Release & Companion Web Portal (`.github/workflows/release-and-deploy.yml`)
+- **Automated Trigger:** Runs on every push to the `main` branch or manual `workflow_dispatch`.
+- **Builds APK:** Automatically sets up JDK 17, Android SDK, and builds the Android debug APK using `./gradlew :app:assembleDebug`.
+- **GitHub Release:** Generates/updates a GitHub Release tagged with the app's version and attaches the `.apk` file for direct phone downloads.
+- **Syncs Datasets:** Automatically copies JSON datasets (`app/src/main/assets/*.json`) into `docs/data/` and updates `docs/data/version.json`.
+- **Deploys Companion Website:** Publishes the `docs/` companion portal directly to **GitHub Pages**.
 
-### 2. Web Deployment to GitHub Pages (`.github/workflows/deploy-web.yml`)
-- Triggers on every push modifying `web/**` or manually via `workflow_dispatch`.
-- Sets up Node.js 20, installs dependencies with `npm ci`, and executes `npm run build`.
-- Deploys the static production build directly to **GitHub Pages**.
+### 🌐 Live URLs
+* **GitHub Releases (APK Downloads):**  
+  [https://github.com/abhishekused/Newapk/releases](https://github.com/abhishekused/Newapk/releases)
+* **GitHub Pages Companion Portal:**  
+  [https://abhishekused.github.io/Newapk/](https://abhishekused.github.io/Newapk/)
 
-#### Enabling GitHub Pages in Your Repository:
-1. Navigate to your repository's **Settings** on GitHub.
-2. In the left sidebar, click **Pages** under *Code and automation*.
-3. Under **Build and deployment** > **Source**, select **GitHub Actions**.
-4. Push your commits to `main` (or run the workflow manually from the **Actions** tab).
-5. Your web app will be live at:  
-   `https://<your-username>.github.io/<repository-name>/`
+#### ⚙️ Enabling GitHub Pages in Your Repository (One-time Setup)
+GitHub requires Pages to be enabled once manually in your repository settings:
+1. Open your repository on GitHub: `https://github.com/abhishekused/Newapk`
+2. Go to **Settings** → **Pages** (in the left sidebar under *Code and automation*).
+3. Under **Build and deployment** → **Source**, select **GitHub Actions**.
+4. That's it! Future pushes to `main` will automatically build, release, and deploy the website.
 
 ---
 
