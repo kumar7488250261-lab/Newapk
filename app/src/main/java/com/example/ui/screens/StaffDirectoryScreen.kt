@@ -19,7 +19,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -72,6 +74,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.KharsiaStaffItem
 import com.example.data.Lobby
+import com.example.data.OtherLobbyCrewItem
 import com.example.data.StaffContact
 import com.example.data.StaffRepository
 import com.example.data.StationContact
@@ -106,6 +109,7 @@ fun StaffDirectoryScreen(
 
     val kharsiaStaff = remember { staffRepository.getKharsiaStaffItems() }
     val otherLobbies = remember { staffRepository.getOtherLobbies() }
+    val allOtherCrew = remember { staffRepository.getAllOtherLobbiesCrew() }
     val tlcContacts = remember { staffRepository.getTlcContacts() }
     val stations = remember { staffRepository.getStations() }
     val divisionalControlCategories = remember { staffRepository.getDivisionalControlCategories() }
@@ -347,7 +351,7 @@ fun StaffDirectoryScreen(
                     },
                     text = {
                         Text(
-                            "Other Lobbies (${otherLobbies.size})",
+                            "Other Lobbies (${allOtherCrew.size})",
                             fontWeight = FontWeight.Bold,
                             color = if (selectedTab == 1) RailwayGold else Color.White,
                             fontSize = 13.sp
@@ -416,7 +420,9 @@ fun StaffDirectoryScreen(
                         onCall = { phone -> dialPhoneNumber(context, phone) }
                     )
                     1 -> OtherLobbiesTabView(
-                        lobbies = filteredOtherLobbies,
+                        lobbies = otherLobbies,
+                        allCrew = allOtherCrew,
+                        searchQuery = searchQuery,
                         onLobbyClick = onLobbyClick,
                         onCall = { phone -> dialPhoneNumber(context, phone) }
                     )
@@ -743,121 +749,562 @@ private fun KharsiaStaffCard(
 @Composable
 private fun OtherLobbiesTabView(
     lobbies: List<Lobby>,
+    allCrew: List<OtherLobbyCrewItem>,
+    searchQuery: String = "",
     onLobbyClick: (Lobby) -> Unit,
     onCall: (String) -> Unit
 ) {
+    var selectedLobbyCode by remember { mutableStateOf("ALL") }
+    var selectedCategory by remember { mutableStateOf("ALL") }
+
+    val otherLobbies = remember(lobbies) {
+        lobbies.filter { !it.code.equals("CTRL", ignoreCase = true) }
+    }
+
+    val selectedLobby = remember(selectedLobbyCode, otherLobbies) {
+        if (selectedLobbyCode == "ALL") null else otherLobbies.find { it.code.equals(selectedLobbyCode, ignoreCase = true) }
+    }
+
+    // Available categories based on selected lobby or across all lobbies
+    val categoryOptions = remember(selectedLobby, allCrew) {
+        if (selectedLobby != null) {
+            val list = mutableListOf<Pair<String, Int>>()
+            list.add("ALL" to selectedLobby.totalContacts)
+            for (cat in selectedLobby.categories) {
+                list.add(cat.category to cat.contacts.size)
+            }
+            list
+        } else {
+            val list = mutableListOf<Pair<String, Int>>()
+            val total = allCrew.size
+            list.add("ALL" to total)
+            val lpGoods = allCrew.count { it.category.contains("Goods", ignoreCase = true) }
+            if (lpGoods > 0) list.add("Loco Pilots (Goods)" to lpGoods)
+            val alp = allCrew.count { it.category.contains("ALP", ignoreCase = true) || it.category.contains("Assistant", ignoreCase = true) }
+            if (alp > 0) list.add("Assistant Loco Pilots (ALP)" to alp)
+            val tm = allCrew.count { it.category.contains("Guard", ignoreCase = true) || it.category.contains("Manager", ignoreCase = true) || it.category.contains("TM", ignoreCase = true) }
+            if (tm > 0) list.add("Train Managers (Guards)" to tm)
+            val shunting = allCrew.count { it.category.contains("Shunting", ignoreCase = true) }
+            if (shunting > 0) list.add("Shunting Staff" to shunting)
+            val pass = allCrew.count { it.category.contains("Passenger", ignoreCase = true) }
+            if (pass > 0) list.add("Loco Pilots (Passenger)" to pass)
+            val cli = allCrew.count { it.category.contains("CLI", ignoreCase = true) }
+            if (cli > 0) list.add("Chief Loco Inspectors (CLI)" to cli)
+            val cc = allCrew.count { it.category.contains("Crew Controller", ignoreCase = true) }
+            if (cc > 0) list.add("Crew Controllers (CC)" to cc)
+            val ccc = allCrew.count { it.category.contains("CCC", ignoreCase = true) || it.category.contains("Controlling", ignoreCase = true) }
+            if (ccc > 0) list.add("Chief Crew Controllers (CCC)" to ccc)
+            val misc = allCrew.count { it.category.contains("Office", ignoreCase = true) || it.category.contains("Miscellaneous", ignoreCase = true) }
+            if (misc > 0) list.add("Office & Misc Staff" to misc)
+            list
+        }
+    }
+
+    // Reset selectedCategory when lobby changes
+    androidx.compose.runtime.LaunchedEffect(selectedLobbyCode) {
+        selectedCategory = "ALL"
+    }
+
+    // Filter crew
+    val filteredCrew = remember(allCrew, selectedLobbyCode, selectedCategory, searchQuery) {
+        allCrew.filter { item ->
+            val matchesLobby = if (selectedLobbyCode == "ALL") true else item.lobbyCode.equals(selectedLobbyCode, ignoreCase = true)
+            val matchesCategory = when (selectedCategory) {
+                "ALL" -> true
+                "Loco Pilots (Goods)" -> item.category.contains("Goods", ignoreCase = true)
+                "Assistant Loco Pilots (ALP)" -> item.category.contains("ALP", ignoreCase = true) || item.category.contains("Assistant", ignoreCase = true)
+                "Train Managers (Guards)" -> item.category.contains("Guard", ignoreCase = true) || item.category.contains("Manager", ignoreCase = true) || item.category.contains("TM", ignoreCase = true)
+                "Shunting Staff" -> item.category.contains("Shunting", ignoreCase = true)
+                "Loco Pilots (Passenger)" -> item.category.contains("Passenger", ignoreCase = true)
+                "Chief Loco Inspectors (CLI)" -> item.category.contains("CLI", ignoreCase = true)
+                "Crew Controllers (CC)" -> item.category.contains("Crew Controller", ignoreCase = true)
+                "Chief Crew Controllers (CCC)" -> item.category.contains("CCC", ignoreCase = true) || item.category.contains("Controlling", ignoreCase = true)
+                "Office & Misc Staff" -> item.category.contains("Office", ignoreCase = true) || item.category.contains("Miscellaneous", ignoreCase = true)
+                else -> item.category.equals(selectedCategory, ignoreCase = true)
+            }
+            val matchesSearch = if (searchQuery.isBlank()) true else {
+                val q = searchQuery.trim().uppercase()
+                item.name.uppercase().contains(q) ||
+                item.mobile.contains(q) ||
+                item.designation.uppercase().contains(q) ||
+                item.lobbyCode.uppercase().contains(q) ||
+                item.category.uppercase().contains(q)
+            }
+            matchesLobby && matchesCategory && matchesSearch
+        }
+    }
+
+    val groupedCrew = remember(filteredCrew, selectedCategory) {
+        if (selectedCategory == "ALL") {
+            filteredCrew.groupBy { it.category }
+        } else {
+            mapOf(selectedCategory to filteredCrew)
+        }
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
+        // 1. LOBBY SELECTOR (HORIZONTAL SCROLLABLE CHIPS)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Select Lobby (${otherLobbies.size} Division Lobbies):",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = RailwayGold
+            )
+            if (selectedLobbyCode != "ALL") {
+                Text(
+                    text = "Clear Lobby (Show All)",
+                    fontSize = 11.5.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF60A5FA),
+                    modifier = Modifier.clickable { selectedLobbyCode = "ALL" }
+                )
+            }
+        }
+
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            contentPadding = PaddingValues(bottom = 8.dp)
+        ) {
+            item {
+                val isSelected = selectedLobbyCode == "ALL"
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isSelected) RailwayGold else DarkSurfaceNavy)
+                        .border(1.dp, if (isSelected) RailwayGold else DarkBorderBlue, RoundedCornerShape(8.dp))
+                        .clickable { selectedLobbyCode = "ALL" }
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = "All Lobbies (${allCrew.size})",
+                        color = if (isSelected) Color(0xFF0F1E36) else Color.White,
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            items(otherLobbies, key = { it.code }) { lobby ->
+                val isSelected = selectedLobbyCode == lobby.code
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isSelected) RailwayGold else DarkSurfaceNavy)
+                        .border(1.dp, if (isSelected) RailwayGold else DarkBorderBlue, RoundedCornerShape(8.dp))
+                        .clickable { selectedLobbyCode = lobby.code }
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = "${lobby.code} (${lobby.totalContacts})",
+                        color = if (isSelected) Color(0xFF0F1E36) else Color.White,
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        // 2. CATEGORY SELECTOR (HORIZONTAL SCROLLABLE CHIPS)
         Text(
-            text = "SECR Bilaspur Division Lobbies (${lobbies.size}) • With Chief Crew Controllers:",
+            text = "Categories Wise Crew (श्रेणी अनुसार क्रू सूची):",
             fontSize = 11.5.sp,
+            fontWeight = FontWeight.Bold,
             color = Color(0xFFA0B4D0),
-            modifier = Modifier.padding(vertical = 4.dp)
+            modifier = Modifier.padding(bottom = 4.dp)
         )
 
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(vertical = 6.dp)
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            contentPadding = PaddingValues(bottom = 8.dp)
         ) {
-            items(lobbies, key = { it.code }) { lobby ->
-                val cccCategory = lobby.categories.find { it.category.contains("CCC", ignoreCase = true) }
-                val firstCcc = cccCategory?.contacts?.firstOrNull()
+            items(categoryOptions, key = { it.first }) { (catName, count) ->
+                val isSelected = selectedCategory == catName
+                val shortLabel = when (catName) {
+                    "Loco Pilots (Goods)" -> "LP (Goods)"
+                    "Assistant Loco Pilots (ALP)" -> "ALP"
+                    "Train Managers (Guards)" -> "TM / Guard"
+                    "Loco Pilots (Passenger)" -> "Passenger LP"
+                    "Chief Loco Inspectors (CLI)" -> "CLI"
+                    "Crew Controllers (CC)" -> "CC"
+                    "Chief Crew Controllers (CCC)" -> "CCC"
+                    "Office & Misc Staff" -> "Office Staff"
+                    else -> catName
+                }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isSelected) Color(0xFF2563EB) else DarkSurfaceNavy)
+                        .border(1.dp, if (isSelected) Color(0xFF60A5FA) else DarkBorderBlue, RoundedCornerShape(8.dp))
+                        .clickable { selectedCategory = catName }
+                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                ) {
+                    Text(
+                        text = "$shortLabel ($count)",
+                        color = if (isSelected) Color.White else Color(0xFFCBD5E1),
+                        fontSize = 11.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                    )
+                }
+            }
+        }
 
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = DarkSurfaceNavy),
-                    shape = RoundedCornerShape(12.dp),
+        // 3. SELECTED LOBBY HEADER CARD (if a specific lobby is chosen)
+        if (selectedLobby != null) {
+            val cccContact = selectedLobby.categories
+                .find { it.category.contains("CCC", ignoreCase = true) }
+                ?.contacts?.firstOrNull()
+
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2E48)),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+                    .border(1.dp, DarkBorderBlue, RoundedCornerShape(12.dp))
+            ) {
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, DarkBorderBlue, RoundedCornerShape(12.dp))
-                        .clickable { onLobbyClick(lobby) }
-                        .testTag("lobby_item_${lobby.code}")
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                         Box(
                             modifier = Modifier
-                                .size(46.dp)
+                                .size(40.dp)
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(RailwayNavy),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = lobby.code,
+                                text = selectedLobby.code,
                                 color = RailwayGold,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp
+                                fontSize = 12.sp
                             )
                         }
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
                             Text(
-                                text = lobby.name,
+                                text = selectedLobby.name,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
-                                fontSize = 14.sp
+                                fontSize = 13.5.sp
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "${lobby.totalContacts} Contacts • ${lobby.categories.size} Categories",
+                                text = "${selectedLobby.totalContacts} Total Crew • ${selectedLobby.categories.size} Categories",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFFA0B4D0)
-                            )
-                            if (firstCcc != null) {
-                                Spacer(modifier = Modifier.height(3.dp))
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(4.dp))
-                                            .background(Color(0xFF991B1B).copy(alpha = 0.3f))
-                                            .padding(horizontal = 4.dp, vertical = 1.dp)
-                                    ) {
-                                        Text(
-                                            text = "CCC",
-                                            fontSize = 9.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color(0xFFFCA5A5)
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = "${firstCcc.name} • ${firstCcc.mobile}",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = RailwayGreen
-                                    )
-                                }
-                            }
-                        }
-
-                        if (firstCcc != null) {
-                            IconButton(
-                                onClick = { onCall(firstCcc.mobile) },
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(RailwayGreen.copy(alpha = 0.2f))
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Phone,
-                                    contentDescription = "Call CCC",
-                                    tint = RailwayGreen,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.ChevronRight,
-                                contentDescription = null,
-                                tint = Color(0xFF7E8EA6)
+                                color = Color(0xFFA0B4D0),
+                                fontSize = 11.sp
                             )
                         }
                     }
+
+                    if (cccContact != null && cccContact.mobile.isNotBlank()) {
+                        IconButton(
+                            onClick = { onCall(cccContact.mobile) },
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(RailwayGreen.copy(alpha = 0.2f))
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Phone,
+                                contentDescription = "Call CCC",
+                                tint = RailwayGreen,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // 4. CREW COUNT SUMMARY
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Showing ${filteredCrew.size} Crew Members:",
+                fontSize = 11.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = RailwayGold
+            )
+            if (selectedLobby != null) {
+                Text(
+                    text = "Lobby: ${selectedLobby.code}",
+                    fontSize = 11.sp,
+                    color = Color(0xFF67E8F9),
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        // 5. CREW CARDS IN LAZYCOLUMN
+        if (filteredCrew.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "No crew found matching filter or search query.",
+                        color = Color(0xFFA0B4D0),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Try clearing search or switching category / lobby.",
+                        color = Color(0xFF64748B),
+                        fontSize = 11.5.sp
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(vertical = 4.dp)
+            ) {
+                groupedCrew.forEach { (catTitle, crewList) ->
+                    if (selectedCategory == "ALL") {
+                        item(key = "header_${selectedLobbyCode}_$catTitle") {
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFF0F1E36)),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .border(0.8.dp, DarkBorderBlue, RoundedCornerShape(8.dp))
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = catTitle,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.5.sp,
+                                        color = RailwayGold
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(RailwayGold.copy(alpha = 0.15f))
+                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = "${crewList.size} Crew",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 10.sp,
+                                            color = RailwayGold
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    itemsIndexed(crewList, key = { index, item -> "${item.lobbyCode}_${item.category}_${item.name}_${item.mobile}_$index" }) { _, crewMember ->
+                        OtherLobbyCrewCard(item = crewMember, onCall = onCall)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OtherLobbyCrewCard(
+    item: OtherLobbyCrewItem,
+    onCall: (String) -> Unit
+) {
+    val (badgeBg, badgeText, icon) = when {
+        item.category.contains("Goods", ignoreCase = true) -> Triple(
+            Color(0xFF1E3A8A).copy(alpha = 0.35f),
+            Color(0xFF93C5FD),
+            Icons.Default.Train
+        )
+        item.category.contains("ALP", ignoreCase = true) || item.category.contains("Assistant", ignoreCase = true) -> Triple(
+            Color(0xFF0E7490).copy(alpha = 0.35f),
+            Color(0xFF67E8F9),
+            Icons.Default.Person
+        )
+        item.category.contains("Guard", ignoreCase = true) || item.category.contains("Manager", ignoreCase = true) || item.category.contains("TM", ignoreCase = true) -> Triple(
+            Color(0xFF065F46).copy(alpha = 0.35f),
+            Color(0xFF6EE7B7),
+            Icons.Default.Train
+        )
+        item.category.contains("Shunting", ignoreCase = true) -> Triple(
+            Color(0xFF581C87).copy(alpha = 0.35f),
+            Color(0xFFD8B4FE),
+            Icons.Default.Build
+        )
+        item.category.contains("Passenger", ignoreCase = true) -> Triple(
+            Color(0xFF78350F).copy(alpha = 0.35f),
+            Color(0xFFFDE68A),
+            Icons.Default.Train
+        )
+        item.category.contains("CLI", ignoreCase = true) || item.category.contains("Inspector", ignoreCase = true) -> Triple(
+            Color(0xFF4C1D95).copy(alpha = 0.35f),
+            Color(0xFFC4B5FD),
+            Icons.Default.Security
+        )
+        item.category.contains("CCC", ignoreCase = true) || item.category.contains("Controlling", ignoreCase = true) -> Triple(
+            Color(0xFF991B1B).copy(alpha = 0.35f),
+            Color(0xFFFCA5A5),
+            Icons.Default.Phone
+        )
+        else -> Triple(
+            Color(0xFF334155).copy(alpha = 0.35f),
+            Color(0xFFCBD5E1),
+            Icons.Default.Person
+        )
+    }
+
+    val shortCategory = when {
+        item.category.contains("Goods", ignoreCase = true) -> "LP (Goods)"
+        item.category.contains("ALP", ignoreCase = true) || item.category.contains("Assistant", ignoreCase = true) -> "ALP"
+        item.category.contains("Guard", ignoreCase = true) || item.category.contains("Manager", ignoreCase = true) -> "TM / Guard"
+        item.category.contains("Shunting", ignoreCase = true) -> "Shunting"
+        item.category.contains("Passenger", ignoreCase = true) -> "LP (Pass)"
+        item.category.contains("CLI", ignoreCase = true) -> "CLI"
+        item.category.contains("Crew Controller", ignoreCase = true) -> "CC"
+        item.category.contains("Controlling", ignoreCase = true) || item.category.contains("CCC", ignoreCase = true) -> "CCC"
+        else -> item.category
+    }
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = DarkSurfaceNavy),
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, DarkBorderBlue, RoundedCornerShape(12.dp))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(badgeBg),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = badgeText,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = item.name,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        fontSize = 13.5.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(badgeBg)
+                                .border(0.8.dp, badgeText.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+                                .padding(horizontal = 5.dp, vertical = 1.5.dp)
+                        ) {
+                            Text(
+                                text = shortCategory,
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = badgeText
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(RailwayNavy)
+                                .padding(horizontal = 5.dp, vertical = 1.5.dp)
+                        ) {
+                            Text(
+                                text = item.lobbyCode,
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = RailwayGold
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Text(
+                    text = "${item.designation} • ${item.lobbyName}",
+                    fontSize = 11.5.sp,
+                    color = Color(0xFFA0B4D0),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                if (item.mobile.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(3.dp))
+                    Text(
+                        text = "Phone: ${item.mobile}",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = RailwayGreen
+                    )
+                }
+            }
+
+            if (item.mobile.isNotBlank()) {
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(
+                    onClick = { onCall(item.mobile) },
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(RailwayGreen.copy(alpha = 0.2f))
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Phone,
+                        contentDescription = "Call ${item.name}",
+                        tint = RailwayGreen,
+                        modifier = Modifier.size(19.dp)
+                    )
                 }
             }
         }

@@ -43,6 +43,7 @@ export class KharsiaStore {
     this.jeepMovements = [];
     this.prRequests = [];
     this.auditLogs = [];
+    this.lobbies = [];
     this.appConfig = {
       latestVersion: '1.0',
       minVersion: '1.0',
@@ -90,6 +91,15 @@ export class KharsiaStore {
     } catch (e) {
       console.warn('Crew master load notice:', e);
       this.crewMaster = [];
+    }
+
+    // Load static directory for all lobbies
+    try {
+      const dirRes = await fetch('./data/kharsia_directory.json').then(r => r.json()).catch(() => ({ lobbies: [] }));
+      this.lobbies = Array.isArray(dirRes?.lobbies) ? dirRes.lobbies : [];
+    } catch (e) {
+      console.warn('Directory load notice:', e);
+      this.lobbies = [];
     }
 
     // Load initial cached datasets
@@ -651,6 +661,34 @@ export class KharsiaStore {
       item.remarks = remarks;
       this._saveLocal('kharsia_web_pr_requests', this.prRequests);
     }
+  }
+
+  // --- LOBBY DIRECTORY ---
+  getLobbies() {
+    return this.lobbies || [];
+  }
+
+  getOtherLobbies() {
+    return (this.lobbies || []).filter(l => l.code !== 'KHS' && l.code !== 'CTRL');
+  }
+
+  getAllOtherCrew() {
+    const list = [];
+    for (const lobby of this.getOtherLobbies()) {
+      for (const cat of lobby.categories || []) {
+        for (const contact of cat.contacts || []) {
+          list.push({
+            lobbyCode: lobby.code,
+            lobbyName: lobby.name,
+            category: cat.category,
+            name: contact.name,
+            designation: contact.designation,
+            mobile: contact.mobile || contact.cug || ''
+          });
+        }
+      }
+    }
+    return list;
   }
 
   // --- STORE REGISTER ---

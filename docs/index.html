@@ -3,27 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kharsia Lobby • SECR Bilaspur Division — Data Portal & APK Download</title>
-  <meta name="description" content="SECR Bilaspur Division Kharsia Combined Lobby: Android APK Download, Station CUG Directory, Crew Master, and Lobbies Phone Book.">
+  <title>Kharsia Lobby Portal • SECR Bilaspur Division — Web Portal & APK Download</title>
+  <meta name="description" content="South East Central Railway (SECR) Bilaspur Division - Kharsia Combined Lobby Portal. PR Remarks, Store Register, Long Hour Tracker, Jeep Movement, Shift Roster, and Android App APK Download.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚂</text></svg>">
   <style>
     :root {
-      --bg: #090e17;
-      --surface: #111a29;
+      --bg: #070c14;
+      --surface: #0f1827;
       --surface-elevated: #162235;
-      --surface-hover: #1c2b42;
-      --border: #1f304b;
-      --border-accent: #2d466e;
+      --surface-card: #121e31;
+      --surface-hover: #1b2b44;
+      --border: #1e314d;
+      --border-accent: #2d4a75;
       --text-main: #f1f5f9;
       --text-muted: #94a3b8;
       --text-dim: #64748b;
       --gold: #f59e0b;
-      --gold-glow: rgba(245, 158, 11, 0.15);
+      --gold-dark: #b45309;
+      --gold-glow: rgba(245, 158, 11, 0.18);
       --green: #10b981;
-      --green-glow: rgba(16, 185, 129, 0.18);
+      --green-dark: #059669;
+      --green-glow: rgba(16, 185, 129, 0.2);
       --blue: #38bdf8;
-      --blue-navy: #0e1e38;
-      --badge-bg: #1e293b;
+      --red: #ef4444;
+      --purple: #a855f7;
+      --navy: #0e1e38;
       --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
     }
@@ -45,7 +49,6 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Container */
     .container {
       max-width: 1280px;
       margin: 0 auto;
@@ -53,29 +56,49 @@
       width: 100%;
     }
 
-    /* Header & Hero */
-    header.hero {
-      padding: 2.5rem 0 2rem;
+    /* Top Bar */
+    .top-strip {
+      background: #05080e;
       border-bottom: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(14, 30, 56, 0.5) 0%, rgba(9, 14, 23, 0) 100%);
+      padding: 0.4rem 0;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+    .top-strip-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .live-time {
+      color: var(--gold);
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    /* Header / Hero */
+    header.hero {
+      padding: 1.75rem 0 1.25rem;
+      border-bottom: 1px solid var(--border);
+      background: radial-gradient(circle at 50% 0%, rgba(30, 64, 112, 0.3) 0%, rgba(7, 12, 20, 0) 75%);
     }
 
     .badge-railway {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      background: var(--blue-navy);
+      background: var(--navy);
       border: 1px solid var(--border-accent);
-      padding: 0.35rem 0.85rem;
+      padding: 0.3rem 0.85rem;
       border-radius: 9999px;
       font-size: 0.75rem;
-      font-weight: 600;
+      font-weight: 700;
       letter-spacing: 0.05em;
       text-transform: uppercase;
       color: var(--gold);
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
     }
-
     .badge-railway .dot {
       width: 8px;
       height: 8px;
@@ -84,856 +107,1763 @@
       box-shadow: 0 0 8px var(--green);
     }
 
+    .hero-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .emblem-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #1e3a8a, #0f172a);
+      border: 2px solid var(--gold);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
     .hero-title {
-      font-size: 2.25rem;
+      font-size: 2.1rem;
       font-weight: 800;
-      letter-spacing: -0.025em;
       color: #ffffff;
+      line-height: 1.15;
+    }
+    .hero-title span {
+      color: var(--gold);
+    }
+
+    .hero-hindi {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-top: 0.2rem;
+    }
+
+    .hero-subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 0.35rem;
+    }
+
+    /* APK Download Feature Card */
+    .apk-card {
+      margin-top: 1.5rem;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(14, 30, 56, 0.6) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .apk-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .android-icon {
+      width: 52px;
+      height: 52px;
+      background: var(--green);
+      color: #042f2e;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 16px var(--green-glow);
+    }
+
+    .apk-text h3 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .apk-meta {
+      font-size: 0.8rem;
+      color: #a7f3d0;
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 0.2rem;
+      font-family: var(--font-mono);
+      flex-wrap: wrap;
+    }
+
+    .apk-actions {
       display: flex;
       align-items: center;
       gap: 0.75rem;
       flex-wrap: wrap;
     }
 
-    .hero-hindi {
-      font-size: 1.15rem;
-      font-weight: 500;
-      color: var(--gold);
-      margin-top: 0.25rem;
-    }
-
-    .hero-desc {
-      color: var(--text-muted);
-      max-width: 780px;
-      margin-top: 0.75rem;
-      font-size: 0.95rem;
-    }
-
-    /* Action bar / Download panel */
-    .download-panel {
-      margin-top: 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      flex-wrap: wrap;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 1rem 1.25rem;
-      border-radius: 12px;
-    }
-
-    .btn-download {
+    .btn-download-main {
       display: inline-flex;
       align-items: center;
       gap: 0.65rem;
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       color: #ffffff;
       font-weight: 700;
-      font-size: 0.95rem;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
+      font-size: 1rem;
+      padding: 0.75rem 1.6rem;
+      border-radius: 10px;
       text-decoration: none;
+      box-shadow: 0 4px 16px var(--green-glow);
       transition: all 0.2s ease;
-      box-shadow: 0 4px 14px var(--green-glow);
+      border: 1px solid rgba(255, 255, 255, 0.15);
     }
-
-    .btn-download:hover {
+    .btn-download-main:hover {
       background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
     }
 
-    .btn-secondary {
+    .btn-outline {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      background: var(--surface-elevated);
+      background: rgba(22, 34, 53, 0.8);
       color: var(--text-main);
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-accent);
       font-weight: 600;
-      font-size: 0.875rem;
-      padding: 0.75rem 1.15rem;
-      border-radius: 8px;
+      font-size: 0.85rem;
+      padding: 0.75rem 1.1rem;
+      border-radius: 10px;
       text-decoration: none;
+      cursor: pointer;
       transition: all 0.2s ease;
     }
-
-    .btn-secondary:hover {
+    .btn-outline:hover {
       background: var(--surface-hover);
-      border-color: var(--border-accent);
+      border-color: var(--gold);
+      color: var(--gold);
     }
 
-    .release-info {
+    /* Navigation Menu Tabs (STAFF DIRECTORY REMOVED) */
+    .menu-nav-wrap {
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .menu-tabs {
+      display: flex;
+      gap: 0.35rem;
+      overflow-x: auto;
+      padding: 0.4rem 0;
+      scrollbar-width: none;
+    }
+    .menu-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab-item {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.7rem 1.1rem;
+      font-size: 0.88rem;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-left: auto;
+      gap: 0.55rem;
+      transition: all 0.15s ease;
+    }
+    .tab-item:hover {
+      color: var(--text-main);
+      background: var(--surface-elevated);
+    }
+    .tab-item.active {
+      color: var(--gold);
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+    .tab-badge {
+      font-size: 0.7rem;
+      padding: 0.1rem 0.45rem;
+      border-radius: 9999px;
+      background: var(--surface-elevated);
+      color: var(--text-dim);
       font-family: var(--font-mono);
     }
-
-    .tag-pill {
-      background: rgba(245, 158, 11, 0.15);
-      border: 1px solid var(--gold);
-      color: var(--gold);
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      font-weight: 700;
+    .tab-item.active .tab-badge {
+      background: var(--gold);
+      color: #070c14;
+      font-weight: 800;
     }
 
-    /* Main Content Section */
+    /* Main Container */
     main {
       padding: 2rem 0 4rem;
       flex: 1;
     }
 
-    /* Navigation Tabs */
-    .tabs-nav {
-      display: flex;
-      gap: 0.5rem;
-      border-bottom: 2px solid var(--border);
-      margin-bottom: 1.5rem;
-      overflow-x: auto;
-      padding-bottom: 2px;
+    .view-section {
+      display: none;
+      animation: fadeIn 0.25s ease;
+    }
+    .view-section.active {
+      display: block;
     }
 
-    .tab-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      padding: 0.75rem 1.25rem;
-      font-size: 0.9rem;
-      font-weight: 700;
-      cursor: pointer;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Section Headers */
+    .section-head {
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #ffffff;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      border-radius: 8px 8px 0 0;
-      transition: all 0.15s ease;
-      white-space: nowrap;
-      position: relative;
+      gap: 0.6rem;
+    }
+    .section-sub {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      margin-top: 0.2rem;
     }
 
-    .tab-btn:hover {
-      color: var(--text-main);
-      background: var(--surface);
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
     }
-
-    .tab-btn.active {
-      color: var(--gold);
-      background: var(--surface);
-      border-bottom: 2px solid var(--gold);
-      margin-bottom: -2px;
-    }
-
-    .tab-badge {
-      background: var(--surface-elevated);
-      color: var(--text-dim);
-      font-size: 0.75rem;
-      padding: 0.1rem 0.45rem;
-      border-radius: 9999px;
-      font-family: var(--font-mono);
-    }
-
-    .tab-btn.active .tab-badge {
-      background: rgba(245, 158, 11, 0.2);
-      color: var(--gold);
-    }
-
-    /* Controls Bar: Search & Stats */
-    .controls-bar {
+    .metric-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.15rem;
       display: flex;
       align-items: center;
       gap: 1rem;
-      margin-bottom: 1.25rem;
-      flex-wrap: wrap;
+      transition: border-color 0.2s;
     }
-
-    .search-wrapper {
-      position: relative;
-      flex: 1;
-      min-width: 260px;
+    .metric-card:hover {
+      border-color: var(--border-accent);
     }
-
-    .search-input {
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: #ffffff;
-      padding: 0.65rem 1rem 0.65rem 2.4rem;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-family: var(--font-mono);
-      outline: none;
-      transition: border-color 0.2s ease;
-    }
-
-    .search-input:focus {
-      border-color: var(--gold);
-      box-shadow: 0 0 0 1px var(--gold);
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 0.8rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-dim);
-      pointer-events: none;
-      font-size: 0.9rem;
-    }
-
-    .filter-count {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-    }
-
-    /* Tables & Data Views */
-    .table-container {
-      background: var(--surface);
-      border: 1px solid var(--border);
+    .metric-icon {
+      width: 44px;
+      height: 44px;
       border-radius: 10px;
-      overflow-x: auto;
-      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .metric-data h4 {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .metric-data .num {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.2;
+      font-family: var(--font-mono);
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-      font-size: 0.875rem;
+    /* Forms */
+    .form-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
     }
-
-    thead th {
-      background: var(--surface-elevated);
-      color: var(--gold);
+    .form-header {
+      font-size: 1.1rem;
       font-weight: 700;
-      padding: 0.85rem 1rem;
-      border-bottom: 1px solid var(--border-accent);
-      white-space: nowrap;
+      color: var(--gold);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .form-group label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      font-size: 0.75rem;
-      font-family: var(--font-mono);
     }
-
-    tbody tr {
-      border-bottom: 1px solid var(--border);
-      transition: background 0.1s ease;
+    .form-control {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: #ffffff;
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s;
     }
-
-    tbody tr:last-child {
-      border-bottom: none;
+    .form-control:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
     }
-
-    tbody tr:hover {
-      background: var(--surface-hover);
-    }
-
-    tbody td {
-      padding: 0.75rem 1rem;
-      color: var(--text-main);
-      vertical-align: middle;
-    }
-
-    .code-cell {
-      font-family: var(--font-mono);
-      font-weight: 700;
-      color: var(--blue);
-      letter-spacing: 0.05em;
-    }
-
-    .id-pill {
-      display: inline-block;
-      font-family: var(--font-mono);
-      font-weight: 700;
-      font-size: 0.75rem;
-      background: rgba(56, 189, 248, 0.12);
-      border: 1px solid rgba(56, 189, 248, 0.35);
-      color: var(--blue);
-      padding: 0.15rem 0.45rem;
-      border-radius: 4px;
-    }
-
-    .tel-link {
-      font-family: var(--font-mono);
-      font-weight: 600;
-      color: var(--green);
-      text-decoration: none;
+    .btn-submit {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+      color: #070c14;
+      font-weight: 800;
+      font-size: 0.95rem;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 0.35rem;
-      padding: 0.2rem 0.4rem;
-      border-radius: 4px;
-      transition: background 0.15s ease;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    .btn-submit:hover {
+      transform: translateY(-1px);
+      opacity: 0.95;
     }
 
-    .tel-link:hover {
-      background: var(--green-glow);
-      text-decoration: underline;
-    }
-
-    /* Nested Directory Sections */
-    .lobby-group {
-      background: var(--surface);
+    /* Tables */
+    .table-card {
+      background: var(--surface-card);
       border: 1px solid var(--border);
       border-radius: 12px;
-      margin-bottom: 1.5rem;
       overflow: hidden;
+      margin-bottom: 2rem;
     }
-
-    .lobby-header {
-      background: linear-gradient(90deg, #162438 0%, #111a29 100%);
+    .table-top {
       padding: 1rem 1.25rem;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 0.5rem;
+      gap: 1rem;
     }
-
-    .lobby-title {
-      font-size: 1.1rem;
-      font-weight: 700;
+    .search-box {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.45rem 0.85rem;
       color: #ffffff;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
+      font-size: 0.85rem;
+      outline: none;
+      width: 260px;
     }
-
-    .category-group {
-      padding: 1rem 1.25rem;
+    .search-box:focus {
+      border-color: var(--gold);
+    }
+    .table-responsive {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+    th {
+      background: var(--surface-elevated);
+      color: var(--text-dim);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      padding: 0.75rem 1rem;
       border-bottom: 1px solid var(--border);
+      white-space: nowrap;
     }
-
-    .category-group:last-child {
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-main);
+      vertical-align: middle;
+    }
+    tr:last-child td {
       border-bottom: none;
     }
+    tr:hover td {
+      background: var(--surface-hover);
+    }
 
-    .category-header {
-      font-size: 0.9rem;
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
       font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+    }
+    .badge-gold {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
       color: var(--gold);
-      margin-bottom: 0.75rem;
+    }
+    .badge-green {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: var(--green);
+    }
+    .badge-red {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: var(--red);
+    }
+    .badge-blue {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: var(--blue);
+    }
+
+    /* Action Buttons in tables */
+    .btn-action {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 0.35rem 0.7rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-action:hover {
+      background: var(--green);
+      color: #042f2e;
+      border-color: var(--green);
+    }
+    .btn-danger {
+      color: var(--red);
+    }
+    .btn-danger:hover {
+      background: var(--red);
+      color: #ffffff;
+      border-color: var(--red);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 1rem;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border-accent);
+      border-radius: 16px;
+      max-width: 580px;
+      width: 100%;
+      padding: 1.75rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      animation: modalPop 0.2s ease;
+    }
+    @keyframes modalPop {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 0.5rem;
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      font-family: var(--font-mono);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
     }
-
-    /* Badge & Tag Helpers */
-    .tag-category {
-      background: var(--badge-bg);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      font-size: 0.75rem;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      font-weight: 600;
-      display: inline-block;
+    .modal-step {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      align-items: flex-start;
     }
-
-    /* Empty state */
-    .empty-state {
-      padding: 3rem 1rem;
-      text-align: center;
-      color: var(--text-dim);
-      font-family: var(--font-mono);
-      font-size: 0.9rem;
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--gold);
+      color: #070c14;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      flex-shrink: 0;
     }
 
     /* Footer */
     footer {
+      background: #05080e;
       border-top: 1px solid var(--border);
       padding: 2rem 0;
-      background: var(--surface);
       color: var(--text-dim);
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       text-align: center;
     }
-
     footer a {
       color: var(--gold);
       text-decoration: none;
     }
-
     footer a:hover {
       text-decoration: underline;
     }
 
     @media (max-width: 768px) {
       .hero-title {
-        font-size: 1.75rem;
+        font-size: 1.6rem;
       }
-      .download-panel {
+      .apk-card {
         flex-direction: column;
         align-items: stretch;
       }
-      .release-info {
-        margin-left: 0;
-        justify-content: space-between;
+      .apk-actions {
+        width: 100%;
       }
-      .tabs-nav {
-        gap: 0.25rem;
-      }
-      .tab-btn {
-        padding: 0.6rem 0.85rem;
-        font-size: 0.8rem;
-      }
-      tbody td, thead th {
-        padding: 0.6rem 0.75rem;
+      .btn-download-main {
+        width: 100%;
+        justify-content: center;
       }
     }
   </style>
 </head>
 <body>
-  <!-- Top Hero Header -->
+
+  <!-- Top Strip -->
+  <div class="top-strip">
+    <div class="container top-strip-inner">
+      <div>
+        <span>SOUTH EAST CENTRAL RAILWAY (SECR) • BILASPUR DIVISION</span>
+      </div>
+      <div>
+        <span>Current Time: <span class="live-time" id="clockDisplay">--:--:--</span></span>
+        <span style="margin: 0 0.5rem;">•</span>
+        <span class="live-time" id="shiftDisplay">Shift: --</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero Header -->
   <header class="hero">
     <div class="container">
       <div class="badge-railway">
         <span class="dot"></span>
-        <span>SECR Bilaspur Division • Railway Operations</span>
+        <span>24x7 Digital Operational Portal • SECR Bilaspur</span>
       </div>
 
-      <h1 class="hero-title">
-        <span>🚂 Kharsia Lobby Companion</span>
-      </h1>
-      <div class="hero-hindi">संयुक्त क्रू लॉबी खरसिया • डिजिटल रिकॉर्ड एवं डेटा पोर्टल</div>
-      <p class="hero-desc">
-        Real-time companion web portal and Android APK repository for South East Central Railway (SECR) Kharsia Combined Lobby. 
-        Browse Station CUG directories, Loco Running Crew rosters, and SECR division-wide lobby phonebooks directly from the browser.
-      </p>
+      <div class="hero-title-wrap">
+        <div class="emblem-icon">🚂</div>
+        <div>
+          <h1 class="hero-title">Kharsia Lobby <span>Operational Portal</span></h1>
+          <div class="hero-hindi">संयुक्त चालक एवं परिचालक लॉबी, खरसिया (द.पू.म. रेलवे)</div>
+          <p class="hero-subtitle">
+            Periodical Rest (PR), Store & Safety Equipment Register, Long Hour Duty Monitoring, Jeep Movement, Shift Roster & LR Declaration.
+          </p>
+        </div>
+      </div>
 
-      <!-- Download Action Bar -->
-      <div class="download-panel">
-        <a id="downloadBtn" 
-           href="https://github.com/abhishekused/Newapk/releases" 
-           class="btn-download" 
-           download>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          <span>Download Latest APK</span>
-        </a>
+      <!-- Prominent APK Download Card -->
+      <div class="apk-card">
+        <div class="apk-info">
+          <div class="android-icon">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.551 0 .9993.4482.9993.9993.0001.5511-.4483.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0223 3.503C15.5802 8.4116 13.8447 8.125 12 8.125s-3.5802.2866-5.1368.8247L4.8409 5.4467a.4161.4161 0 00-.5677-.1521.4157.4157 0 00-.152 5676l1.9972 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3432-4.1021-2.6889-7.5743-6.1185-9.4396"/>
+            </svg>
+          </div>
+          <div class="apk-text">
+            <h3>Kharsia Lobby Android App (APK)</h3>
+            <div class="apk-meta">
+              <span>📦 Package: com.aistudio.kharsialobby</span>
+              <span>•</span>
+              <span>⚡ v2.4.0 Latest</span>
+              <span>•</span>
+              <span>💾 Size: ~26 MB</span>
+              <span>•</span>
+              <span>✅ Certified SECR Build</span>
+            </div>
+          </div>
+        </div>
 
-        <a id="releasePageBtn" 
-           href="https://github.com/abhishekused/Newapk/releases" 
-           target="_blank" 
-           rel="noopener noreferrer" 
-           class="btn-secondary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-            <polyline points="15 3 21 3 21 9"></polyline>
-            <line x1="10" y1="14" x2="21" y2="3"></line>
-          </svg>
-          <span>All Releases</span>
-        </a>
+        <div class="apk-actions">
+          <a href="./kharsia-lobby.apk" download="kharsia-lobby-app.apk" class="btn-download-main" id="apkDownloadDirect">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Download App APK</span>
+          </a>
 
-        <div class="release-info">
-          <span>Release:</span>
-          <span id="versionTag" class="tag-pill">v1.0 (Latest)</span>
-          <span id="buildDate" style="display:none;"></span>
+          <button type="button" class="btn-outline" onclick="openInstallModal()">
+            <span>❓ Install Guide</span>
+          </button>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Main Data Section -->
+  <!-- Sticky Menu Navigation (Staff Directory completely removed) -->
+  <nav class="menu-nav-wrap">
+    <div class="container">
+      <div class="menu-tabs">
+        <button class="tab-item active" onclick="switchView('pr')">
+          <span>📋 Periodical Rest (PR)</span>
+          <span class="tab-badge" id="badge-pr-count">0</span>
+        </button>
+        <button class="tab-item" onclick="switchView('store')">
+          <span>🧰 Store / Equipment</span>
+          <span class="tab-badge" id="badge-store-count">0</span>
+        </button>
+        <button class="tab-item" onclick="switchView('longhour')">
+          <span>⏱️ Long Hour Duties</span>
+          <span class="tab-badge" id="badge-longhour-count">0</span>
+        </button>
+        <button class="tab-item" onclick="switchView('jeep')">
+          <span>🚙 Jeep Movement</span>
+          <span class="tab-badge" id="badge-jeep-count">6</span>
+        </button>
+        <button class="tab-item" onclick="switchView('roster')">
+          <span>🗓️ Shift Roster & TLC</span>
+        </button>
+        <button class="tab-item" onclick="switchView('lr')">
+          <span>🛣️ LR Declaration</span>
+          <span class="tab-badge" id="badge-lr-count">0</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main View Area -->
   <main class="container">
-    <!-- Dataset Tabs -->
-    <div class="tabs-nav" role="tablist">
-      <button class="tab-btn active" onclick="switchTab('crew')" id="tab-btn-crew">
-        <span>👨‍✈️ Kharsia Running Crew</span>
-        <span class="tab-badge" id="count-crew">...</span>
-      </button>
-      <button class="tab-btn" onclick="switchTab('stations')" id="tab-btn-stations">
-        <span>🚉 SECR Stations CUG</span>
-        <span class="tab-badge" id="count-stations">...</span>
-      </button>
-      <button class="tab-btn" onclick="switchTab('directory')" id="tab-btn-directory">
-        <span>📞 14 Lobbies Directory</span>
-        <span class="tab-badge" id="count-directory">...</span>
-      </button>
-    </div>
 
-    <!-- Search Controls -->
-    <div class="controls-bar">
-      <div class="search-wrapper">
-        <span class="search-icon">🔍</span>
-        <input type="text" 
-               id="searchInput" 
-               class="search-input" 
-               placeholder="Search by ID, name, designation, station code, phone number..." 
-               oninput="onSearchChange()">
+    <!-- ============================================================== -->
+    <!-- 1. PERIODICAL REST (PR) MODULE                                 -->
+    <!-- ============================================================== -->
+    <section id="view-pr" class="view-section active">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">📋 Periodical Rest (PR) Remarks Portal</h2>
+          <p class="section-sub">Sign-Off Record, PR Due Calculation (30h / 40h / 54h) & In-Charge Remarks</p>
+        </div>
       </div>
-      <div class="filter-count" id="filterStatus">Loading datasets...</div>
-    </div>
 
-    <!-- Tab 1: Kharsia Crew Master -->
-    <section id="tab-crew" class="tab-content">
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Crew ID</th>
-              <th>Name</th>
-              <th>Designation</th>
-              <th>Category</th>
-              <th>Cadre</th>
-            </tr>
-          </thead>
-          <tbody id="crewTableBody">
-            <tr><td colspan="5" class="empty-state">Loading Kharsia Crew dataset...</td></tr>
-          </tbody>
-        </table>
+      <!-- PR Metrics -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--gold);">📋</div>
+          <div class="metric-data">
+            <h4>Total PR Records</h4>
+            <div class="num" id="pr-stat-total">0</div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(56, 189, 248, 0.15); color: var(--blue);">⏳</div>
+          <div class="metric-data">
+            <h4>Pending Rest Hours</h4>
+            <div class="num" id="pr-stat-pending">0</div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--green);">✅</div>
+          <div class="metric-data">
+            <h4>Approved / Sign-Off</h4>
+            <div class="num" id="pr-stat-approved">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add PR Form -->
+      <div class="form-card">
+        <div class="form-header">✍️ Mark Periodical Rest (पी.आर प्रविष्टि दर्ज करें)</div>
+        <form id="form-pr" onsubmit="handlePrSubmit(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Crew CMS ID *</label>
+              <input type="text" class="form-control" id="pr-crew-id" placeholder="e.g. KHS1001, BSP102" required>
+            </div>
+            <div class="form-group">
+              <label>Crew Name *</label>
+              <input type="text" class="form-control" id="pr-crew-name" placeholder="Full Name" required>
+            </div>
+            <div class="form-group">
+              <label>Designation</label>
+              <select class="form-control" id="pr-designation">
+                <option value="Loco Pilot (Goods)">Loco Pilot (Goods) - LPG</option>
+                <option value="Loco Pilot (Passenger)">Loco Pilot (Passenger) - LPP</option>
+                <option value="Assistant Loco Pilot">Assistant Loco Pilot - ALP</option>
+                <option value="Train Manager (Guard)">Train Manager (Guard) - TM</option>
+                <option value="Loco Pilot (Shunting)">Loco Pilot (Shunting)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Sign-Off Date & Time *</label>
+              <input type="datetime-local" class="form-control" id="pr-signoff-time" required>
+            </div>
+            <div class="form-group">
+              <label>PR Duration Required *</label>
+              <select class="form-control" id="pr-duration">
+                <option value="30 Hours">30 Hours Periodical Rest</option>
+                <option value="40 Hours">40 Hours Periodical Rest</option>
+                <option value="54 Hours">54 Hours Periodical Rest (Extended)</option>
+                <option value="22 Hours (Local)">22 Hours Local Rest</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Contact Mobile No.</label>
+              <input type="tel" class="form-control" id="pr-mobile" placeholder="10-digit mobile number">
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label>Remarks / Station of Relief</label>
+              <input type="text" class="form-control" id="pr-remarks" placeholder="Relieved at station / Train number / Reason">
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">💾 Save PR Remark</button>
+        </form>
+      </div>
+
+      <!-- PR Records Table -->
+      <div class="table-card">
+        <div class="table-top">
+          <div style="font-weight: 700; color: #ffffff;">Current PR Registers (वर्तमान पी.आर सूची)</div>
+          <input type="text" class="search-box" id="pr-search" placeholder="Search Crew ID, Name..." oninput="renderPrTable()">
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>CMS ID</th>
+                <th>Crew Name</th>
+                <th>Designation</th>
+                <th>Sign-Off Time</th>
+                <th>PR Duration</th>
+                <th>Mobile</th>
+                <th>Remarks</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="pr-table-body">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
-    <!-- Tab 2: SECR Stations -->
-    <section id="tab-stations" class="tab-content" style="display: none;">
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>S.No</th>
-              <th>Code</th>
-              <th>Station Name</th>
-              <th>CUG Mobile</th>
-              <th>Landline</th>
-              <th>Section / Division</th>
-            </tr>
-          </thead>
-          <tbody id="stationsTableBody">
-            <tr><td colspan="6" class="empty-state">Loading SECR Stations dataset...</td></tr>
-          </tbody>
-        </table>
+    <!-- ============================================================== -->
+    <!-- 2. STORE / EQUIPMENT REGISTER MODULE                           -->
+    <!-- ============================================================== -->
+    <section id="view-store" class="view-section">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">🧰 Store & Safety Equipment Register</h2>
+          <p class="section-sub">Lobby Equipment Inventory, Fast Issue to Crew & Return Register</p>
+        </div>
+      </div>
+
+      <!-- Equipment Quick Stock Cards -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--green);">📻</div>
+          <div class="metric-data">
+            <h4>Walkie-Talkies (VHF)</h4>
+            <div class="num" id="stock-walkie">24 / 40</div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--gold);">🔦</div>
+          <div class="metric-data">
+            <h4>Tri-Color Torches</h4>
+            <div class="num" id="stock-torch">18 / 35</div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(239, 68, 68, 0.15); color: var(--red);">🚩</div>
+          <div class="metric-data">
+            <h4>HS Flags (Red/Green)</h4>
+            <div class="num" id="stock-flag">30 / 45</div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(168, 85, 247, 0.15); color: var(--purple);">🏮</div>
+          <div class="metric-data">
+            <h4>Loco Tail Lamps</h4>
+            <div class="num" id="stock-lamp">12 / 20</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue Equipment Form -->
+      <div class="form-card">
+        <div class="form-header">📤 Issue Equipment to Crew (उपकरण जारी करें)</div>
+        <form id="form-store" onsubmit="handleStoreIssue(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Crew CMS ID *</label>
+              <input type="text" class="form-control" id="store-crew-id" placeholder="e.g. KHS1004" required>
+            </div>
+            <div class="form-group">
+              <label>Crew Name *</label>
+              <input type="text" class="form-control" id="store-crew-name" placeholder="Full Name" required>
+            </div>
+            <div class="form-group">
+              <label>Equipment Type *</label>
+              <select class="form-control" id="store-item-type">
+                <option value="Walkie-Talkie (VHF Set)">Walkie-Talkie (VHF 5W Set)</option>
+                <option value="Tri-Color LED Torch">Tri-Color Rechargeable Torch</option>
+                <option value="HS Flags (Pair Red/Green)">Hand Signal Flags (Red + Green)</option>
+                <option value="Loco Flasher / Tail Lamp">Loco Flasher / Tail Lamp</option>
+                <option value="Reversible Loco Spanner">Loco Reversible Spanner</option>
+                <option value="Detonators (Tin of 10)">Detonators / Fog Signals (10 Pcs)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Item Serial / Barcode No. *</label>
+              <input type="text" class="form-control" id="store-serial" placeholder="e.g. WT-KHS-042" required>
+            </div>
+            <div class="form-group">
+              <label>Train / Loco Number</label>
+              <input type="text" class="form-control" id="store-train" placeholder="e.g. 12834 / WAG9-31245">
+            </div>
+            <div class="form-group">
+              <label>Issued By (Supervisor)</label>
+              <input type="text" class="form-control" id="store-issued-by" value="CC / Lobby Desk" required>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">📤 Issue Equipment</button>
+        </form>
+      </div>
+
+      <!-- Active Issued Items Register -->
+      <div class="table-card">
+        <div class="table-top">
+          <div style="font-weight: 700; color: #ffffff;">Currently Issued Store Items (जारी उपकरणों का रजिस्टर)</div>
+          <input type="text" class="search-box" id="store-search" placeholder="Search Item or Crew..." oninput="renderStoreTable()">
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Serial No.</th>
+                <th>Equipment</th>
+                <th>Issued To Crew</th>
+                <th>Train / Loco</th>
+                <th>Issue Date & Time</th>
+                <th>Issued By</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="store-table-body">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
-    <!-- Tab 3: Grouped Lobbies Directory -->
-    <section id="tab-directory" class="tab-content" style="display: none;">
-      <div id="directoryContainer">
-        <div class="empty-state">Loading Lobbies Directory dataset...</div>
+    <!-- ============================================================== -->
+    <!-- 3. LONG HOUR DUTY TRACKER MODULE                               -->
+    <!-- ============================================================== -->
+    <section id="view-longhour" class="view-section">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">⏱️ Long Hour Duty Monitoring Board</h2>
+          <p class="section-sub">Track Running Staff Duties Exceeding 9 Hours and 12 Hours Alert</p>
+        </div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(239, 68, 68, 0.15); color: var(--red);">🚨</div>
+          <div class="metric-data">
+            <h4>Critical (>12 Hours)</h4>
+            <div class="num" id="lh-stat-12">0</div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--gold);">⚠️</div>
+          <div class="metric-data">
+            <h4>Long Hour (>9 Hours)</h4>
+            <div class="num" id="lh-stat-9">0</div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--green);">🟢</div>
+          <div class="metric-data">
+            <h4>Under Relief</h4>
+            <div class="num" id="lh-stat-relief">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Long Hour Form -->
+      <div class="form-card">
+        <div class="form-header">⚠️ Report Long Hour Running Duty (लॉन्ग ऑवर ड्यूटी दर्ज करें)</div>
+        <form id="form-lh" onsubmit="handleLhSubmit(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Crew CMS ID *</label>
+              <input type="text" class="form-control" id="lh-crew-id" placeholder="e.g. KHS1021" required>
+            </div>
+            <div class="form-group">
+              <label>Crew Name *</label>
+              <input type="text" class="form-control" id="lh-crew-name" placeholder="Full Name" required>
+            </div>
+            <div class="form-group">
+              <label>Train No. / Name *</label>
+              <input type="text" class="form-control" id="lh-train" placeholder="e.g. BOXN / N-BSP" required>
+            </div>
+            <div class="form-group">
+              <label>Loco Number</label>
+              <input type="text" class="form-control" id="lh-loco" placeholder="e.g. WAG9 32145">
+            </div>
+            <div class="form-group">
+              <label>Sign-On Time *</label>
+              <input type="datetime-local" class="form-control" id="lh-signon-time" required>
+            </div>
+            <div class="form-group">
+              <label>Current Working Station / Section *</label>
+              <input type="text" class="form-control" id="lh-section" placeholder="e.g. Between RIG and KHS" required>
+            </div>
+            <div class="form-group">
+              <label>Reason for Detention *</label>
+              <select class="form-control" id="lh-reason">
+                <option value="Precedence to Coaching Trains">Precedence to Coaching Trains</option>
+                <option value="Signal / Track Maintenance Block">Signal / Track Maintenance Block</option>
+                <option value="Loco Trouble / Power Issue">Loco Trouble / Power Issue</option>
+                <option value="Waiting for Crossing / Yard Congestion">Waiting for Crossing / Yard Congestion</option>
+                <option value="Late Arrival of Relief Crew">Late Arrival of Relief Crew</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Relief Crew Arranged?</label>
+              <select class="form-control" id="lh-relief-status">
+                <option value="Relief Required Urgently">Relief Required Urgently</option>
+                <option value="Relief Crew Dispatched by Jeep">Relief Crew Dispatched by Jeep</option>
+                <option value="Train Approaching Kharsia Yard">Train Approaching Kharsia Yard</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">🚨 Report Long Hour Duty</button>
+        </form>
+      </div>
+
+      <!-- Long Hour Duties Table -->
+      <div class="table-card">
+        <div class="table-top">
+          <div style="font-weight: 700; color: #ffffff;">Live Long Hour Board (लॉन्ग ऑवर ड्यूटी सूची)</div>
+          <input type="text" class="search-box" id="lh-search" placeholder="Search Train or Crew..." oninput="renderLhTable()">
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Train / Loco</th>
+                <th>Crew Member</th>
+                <th>Sign-On</th>
+                <th>Duty Hours</th>
+                <th>Current Section</th>
+                <th>Detention Reason</th>
+                <th>Relief Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="lh-table-body">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
+
+    <!-- ============================================================== -->
+    <!-- 4. JEEP MOVEMENT & AVAILABILITY MODULE                         -->
+    <!-- ============================================================== -->
+    <section id="view-jeep" class="view-section">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">🚙 Jeep Movement & Fleet Availability</h2>
+          <p class="section-sub">Lobby Crew Relief Vehicles, Driver Contact & Movement Register</p>
+        </div>
+      </div>
+
+      <!-- Fleet Status Grid -->
+      <div class="form-card" style="margin-bottom: 1.5rem;">
+        <div class="form-header">🚖 Attached Lobby Fleet Status</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;" id="jeep-fleet-grid">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- Log Movement Form -->
+      <div class="form-card">
+        <div class="form-header">📝 Record Jeep Movement (गाड़ी रवानगी / वापसी प्रविष्टि)</div>
+        <form id="form-jeep" onsubmit="handleJeepSubmit(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Select Vehicle *</label>
+              <select class="form-control" id="jeep-vehicle" onchange="autoFillDriver()">
+                <option value="CG-13-UD-0101 (Bolero)">CG-13-UD-0101 (Bolero)</option>
+                <option value="CG-13-UD-0102 (Cruiser)">CG-13-UD-0102 (Cruiser)</option>
+                <option value="CG-13-UE-0205 (Bolero)">CG-13-UE-0205 (Bolero)</option>
+                <option value="OD-16-A-5432 (Camper)">OD-16-A-5432 (Camper)</option>
+                <option value="CG-13-UF-0331 (Bolero)">CG-13-UF-0331 (Bolero)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Driver Name *</label>
+              <input type="text" class="form-control" id="jeep-driver" placeholder="Driver Name" required>
+            </div>
+            <div class="form-group">
+              <label>Driver Mobile</label>
+              <input type="tel" class="form-control" id="jeep-driver-phone" placeholder="Phone Number">
+            </div>
+            <div class="form-group">
+              <label>Destination / Section *</label>
+              <input type="text" class="form-control" id="jeep-destination" placeholder="e.g. Robertson (ROB) / Raigarh" required>
+            </div>
+            <div class="form-group">
+              <label>Movement Purpose *</label>
+              <select class="form-control" id="jeep-purpose">
+                <option value="Crew Relief on Line">Crew Relief on Line</option>
+                <option value="Bringing Relieved Crew to Lobby">Bringing Relieved Crew to Lobby</option>
+                <option value="Emergency Breakdown Relief">Emergency Breakdown Relief</option>
+                <option value="Station Duty / Siding Movement">Station Duty / Siding Movement</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Departure Odo Meter (KM)</label>
+              <input type="number" class="form-control" id="jeep-meter-out" placeholder="e.g. 54210">
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">🚙 Log Movement</button>
+        </form>
+      </div>
+
+      <!-- Movement History Table -->
+      <div class="table-card">
+        <div class="table-top">
+          <div style="font-weight: 700; color: #ffffff;">Jeep Trip History (गाड़ी मूवमेंट लॉग)</div>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Vehicle No.</th>
+                <th>Driver</th>
+                <th>Destination</th>
+                <th>Purpose</th>
+                <th>Departure Time</th>
+                <th>Meter (Out)</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="jeep-table-body">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- 5. SHIFT ROSTER & TLC PORTAL MODULE                            -->
+    <!-- ============================================================== -->
+    <section id="view-roster" class="view-section">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">🗓️ Shift-Wise Crew Roster & TLC Portal</h2>
+          <p class="section-sub">Traction Loco Controller (TLC BSP) Operations & Kharsia Lobby 3-Shift Roster</p>
+        </div>
+      </div>
+
+      <!-- 3 Shifts Overview Cards -->
+      <div class="metrics-grid">
+        <div class="metric-card" style="border-left: 4px solid var(--blue);">
+          <div class="metric-icon" style="background: rgba(56, 189, 248, 0.15); color: var(--blue);">🌙</div>
+          <div class="metric-data">
+            <h4>Shift 1 (00:00 - 08:00)</h4>
+            <div class="num" style="font-size: 1.15rem; color: #ffffff;">Night Shift Desk</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">CC In-Charge: L.K. Sahu</div>
+          </div>
+        </div>
+        <div class="metric-card" style="border-left: 4px solid var(--gold);">
+          <div class="metric-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--gold);">☀️</div>
+          <div class="metric-data">
+            <h4>Shift 2 (08:00 - 16:00)</h4>
+            <div class="num" style="font-size: 1.15rem; color: #ffffff;">Day Shift Desk</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">CC In-Charge: V.K. Chandra</div>
+          </div>
+        </div>
+        <div class="metric-card" style="border-left: 4px solid var(--purple);">
+          <div class="metric-icon" style="background: rgba(168, 85, 247, 0.15); color: var(--purple);">🌆</div>
+          <div class="metric-data">
+            <h4>Shift 3 (16:00 - 24:00)</h4>
+            <div class="num" style="font-size: 1.15rem; color: #ffffff;">Evening Shift Desk</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">CC In-Charge: Duty Supervisor</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TLC Quick Dial Directory -->
+      <div class="form-card" style="margin-bottom: 2rem;">
+        <div class="form-header">📞 24x7 Traction Loco Controller (TLC BSP) Direct Lines</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+          <div style="background: var(--surface-elevated); padding: 1rem; border-radius: 10px; border: 1px solid var(--border);">
+            <div style="font-weight: 700; color: #ffffff;">TLC Bilaspur (Main Desk)</div>
+            <div style="font-size: 0.85rem; color: var(--gold); margin: 0.2rem 0;">Traction Loco Control BSP</div>
+            <div style="font-size: 1.1rem; font-family: var(--font-mono); color: var(--green); font-weight: 700;">9752442111 / 9752441935</div>
+          </div>
+          <div style="background: var(--surface-elevated); padding: 1rem; border-radius: 10px; border: 1px solid var(--border);">
+            <div style="font-weight: 700; color: #ffffff;">TLC Emergency Desk (BSP)</div>
+            <div style="font-size: 0.85rem; color: var(--gold); margin: 0.2rem 0;">24x7 Power Breakdown Assistance</div>
+            <div style="font-size: 1.1rem; font-family: var(--font-mono); color: var(--green); font-weight: 700;">9981050115 / 9752442115</div>
+          </div>
+          <div style="background: var(--surface-elevated); padding: 1rem; border-radius: 10px; border: 1px solid var(--border);">
+            <div style="font-weight: 700; color: #ffffff;">Kharsia Lobby Landline</div>
+            <div style="font-size: 0.85rem; color: var(--gold); margin: 0.2rem 0;">Master Control Desk</div>
+            <div style="font-size: 1.1rem; font-family: var(--font-mono); color: var(--green); font-weight: 700;">07766-276100 (Ext: 58820)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- 6. LR DECLARATION (LEARNING ROAD) MODULE                       -->
+    <!-- ============================================================== -->
+    <section id="view-lr" class="view-section">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">🛣️ Learning Road (LR) Declaration Portal</h2>
+          <p class="section-sub">Loco Pilot Route Learning Road Section Declarations & Validity Management</p>
+        </div>
+      </div>
+
+      <!-- Add LR Declaration Form -->
+      <div class="form-card">
+        <div class="form-header">✍️ Submit LR Declaration (एल.आर घोषणा दर्ज करें)</div>
+        <form id="form-lr" onsubmit="handleLrSubmit(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Crew CMS ID *</label>
+              <input type="text" class="form-control" id="lr-crew-id" placeholder="e.g. KHS1012" required>
+            </div>
+            <div class="form-group">
+              <label>Crew Name *</label>
+              <input type="text" class="form-control" id="lr-crew-name" placeholder="Full Name" required>
+            </div>
+            <div class="form-group">
+              <label>Designation</label>
+              <select class="form-control" id="lr-designation">
+                <option value="Loco Pilot (Goods)">Loco Pilot (Goods)</option>
+                <option value="Assistant Loco Pilot">Assistant Loco Pilot</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Route / Section *</label>
+              <select class="form-control" id="lr-section">
+                <option value="Kharsia (KHS) – Raigarh (RIG) 3rd Line">Kharsia (KHS) – Raigarh (RIG) 3rd Line</option>
+                <option value="Kharsia (KHS) – Champa (CPH) – Bilaspur (BSP)">Kharsia (KHS) – Champa (CPH) – Bilaspur (BSP)</option>
+                <option value="Champa (CPH) – Gevra Road (GAD) / Korba">Champa (CPH) – Gevra Road (GAD) / Korba</option>
+                <option value="Bilaspur (BSP) – Anuppur – Shahdol (SDL)">Bilaspur (BSP) – Anuppur – Shahdol (SDL)</option>
+                <option value="Kharsia (KHS) – Dharamjaigarh (CERL)">Kharsia (KHS) – Dharamjaigarh (CERL Coal Line)</option>
+                <option value="Raigarh (RIG) – Brajrajnagar (BRJN) – Jharsuguda">Raigarh (RIG) – Brajrajnagar (BRJN) – Jharsuguda</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Date of Last Trip In Section *</label>
+              <input type="date" class="form-control" id="lr-last-trip" required>
+            </div>
+            <div class="form-group">
+              <label>Trip Type Handled</label>
+              <select class="form-control" id="lr-trip-type">
+                <option value="Day & Night Trip Both">Day & Night Trip Both</option>
+                <option value="Day Trip Only">Day Trip Only</option>
+                <option value="Night Trip Only">Night Trip Only</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <input type="checkbox" id="lr-declaration-check" required style="width: 18px; height: 18px; accent-color: var(--gold);">
+            <label for="lr-declaration-check" style="font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
+              I hereby declare that I have thorough road knowledge and signals of the above route according to SECR Operating Rules.
+            </label>
+          </div>
+          <button type="submit" class="btn-submit">💾 Submit LR Declaration</button>
+        </form>
+      </div>
+
+      <!-- LR Declarations Table -->
+      <div class="table-card">
+        <div class="table-top">
+          <div style="font-weight: 700; color: #ffffff;">Submitted LR Declarations (एल.आर घोषणा रजिस्टर)</div>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>CMS ID</th>
+                <th>Crew Name</th>
+                <th>Route / Section</th>
+                <th>Last Trip Date</th>
+                <th>Trip Type</th>
+                <th>Valid Till</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="lr-table-body">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
   </main>
+
+  <!-- How to Install Modal -->
+  <div class="modal-overlay" id="installModal" onclick="if(event.target===this) closeInstallModal()">
+    <div class="modal-box">
+      <div class="modal-title">
+        <span>📲 How to Install Kharsia Lobby APK on Android</span>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">
+        Follow these simple steps to install the official Kharsia Lobby app on your smartphone:
+      </p>
+
+      <div class="modal-step">
+        <div class="step-num">1</div>
+        <div>
+          <div style="font-weight: 700; color: #ffffff;">Download the APK</div>
+          <div style="color: var(--text-muted); font-size: 0.85rem;">Click the green <strong>"Download App APK"</strong> button above. The download will start automatically (~26 MB).</div>
+        </div>
+      </div>
+
+      <div class="modal-step">
+        <div class="step-num">2</div>
+        <div>
+          <div style="font-weight: 700; color: #ffffff;">Allow "Install from Unknown Sources"</div>
+          <div style="color: var(--text-muted); font-size: 0.85rem;">If your browser asks for permission, tap <em>Settings</em> and toggle on <em>"Allow from this source"</em>.</div>
+        </div>
+      </div>
+
+      <div class="modal-step">
+        <div class="step-num">3</div>
+        <div>
+          <div style="font-weight: 700; color: #ffffff;">Install & Launch</div>
+          <div style="color: var(--text-muted); font-size: 0.85rem;">Tap <strong>"Install"</strong> when prompted. Once complete, tap <strong>"Open"</strong> to access the Kharsia Lobby portal on your mobile device!</div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem; gap: 0.75rem;">
+        <button class="btn-outline" onclick="closeInstallModal()">Close</button>
+        <a href="./kharsia-lobby.apk" download="kharsia-lobby-app.apk" class="btn-download-main" style="font-size: 0.9rem; padding: 0.6rem 1.2rem;">Download APK Now</a>
+      </div>
+    </div>
+  </div>
 
   <!-- Footer -->
   <footer>
     <div class="container">
-      <p>South East Central Railway (SECR) • Bilaspur Division • Kharsia Combined Lobby</p>
-      <p style="margin-top: 0.4rem;">
-        Automated via <a href="https://github.com/abhishekused/Newapk/actions" target="_blank">GitHub Actions</a> • 
-        App Repository: <a href="https://github.com/abhishekused/Newapk" target="_blank">abhishekused/Newapk</a>
-      </p>
+      <div>SOUTH EAST CENTRAL RAILWAY • BILASPUR DIVISION • KHARSIA LOBBY</div>
+      <div style="margin-top: 0.4rem;">
+        Kharsia Operational Portal & Android APK Repository.
+        Designed for SECR Running Staff, Chief Loco Inspectors & Crew Controllers.
+      </div>
+      <div style="margin-top: 0.75rem; color: #475569; font-size: 0.78rem;">
+        Website data syncs directly with GitHub repository.
+      </div>
     </div>
   </footer>
 
-  <!-- Application Logic -->
+  <!-- Web Application Logic -->
   <script>
-    // GitHub Repo Configuration
-    const GITHUB_OWNER = 'abhishekused';
-    const GITHUB_REPO = 'Newapk';
-    const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest`;
+    // Live Clock & Shift Calculation
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-IN', { hour12: false });
+      const hours = now.getHours();
 
-    // Data stores
-    let crewData = [];
-    let stationsData = [];
-    let directoryData = { lobbies: [] };
-    let currentTab = 'crew';
+      let shift = "Shift 1 (00:00 - 08:00)";
+      if (hours >= 8 && hours < 16) shift = "Shift 2 (08:00 - 16:00)";
+      else if (hours >= 16) shift = "Shift 3 (16:00 - 24:00)";
 
-    // Format phone numbers into clickable tel: links
-    function formatPhone(phone) {
-      if (!phone || String(phone).trim() === '') return '<span style="color:var(--text-dim);">-</span>';
-      const clean = String(phone).replace(/[^0-9+]/g, '');
-      if (clean.length < 5) return String(phone);
-      return `<a href="tel:${clean}" class="tel-link">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-        </svg>
-        ${phone}
-      </a>`;
+      const clockEl = document.getElementById('clockDisplay');
+      const shiftEl = document.getElementById('shiftDisplay');
+      if (clockEl) clockEl.textContent = timeStr;
+      if (shiftEl) shiftEl.textContent = shift;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Modal Control
+    function openInstallModal() {
+      document.getElementById('installModal').classList.add('active');
+    }
+    function closeInstallModal() {
+      document.getElementById('installModal').classList.remove('active');
     }
 
-    // Tab switcher
-    function switchTab(tab) {
-      currentTab = tab;
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(section => section.style.display = 'none');
+    // View Navigation
+    function switchView(viewId) {
+      document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+      document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
 
-      document.getElementById(`tab-btn-${tab}`).classList.add('active');
-      document.getElementById(`tab-${tab}`).style.display = 'block';
+      const target = document.getElementById(`view-${viewId}`);
+      if (target) target.classList.add('active');
 
-      // Re-apply search filter
-      renderActiveTab();
+      const activeBtn = Array.from(document.querySelectorAll('.tab-item')).find(btn => 
+        btn.getAttribute('onclick')?.includes(viewId)
+      );
+      if (activeBtn) activeBtn.classList.add('active');
     }
 
-    function onSearchChange() {
-      renderActiveTab();
-    }
-
-    // Render active tab according to search query
-    function renderActiveTab() {
-      const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
-
-      if (currentTab === 'crew') {
-        renderCrew(q);
-      } else if (currentTab === 'stations') {
-        renderStations(q);
-      } else if (currentTab === 'directory') {
-        renderDirectory(q);
-      }
-    }
-
-    // 1. Render Crew Master Table
-    function renderCrew(query) {
-      const tbody = document.getElementById('crewTableBody');
-      const filtered = crewData.filter(item => {
-        if (!query) return true;
-        return (item.crewId && item.crewId.toLowerCase().includes(query)) ||
-               (item.name && item.name.toLowerCase().includes(query)) ||
-               (item.designation && item.designation.toLowerCase().includes(query)) ||
-               (item.category && item.category.toLowerCase().includes(query)) ||
-               (item.cadre && item.cadre.toLowerCase().includes(query));
-      });
-
-      document.getElementById('filterStatus').textContent = `Showing ${filtered.length} of ${crewData.length} crew members`;
-
-      if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No matching crew found for "${query}"</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = filtered.map(c => `
-        <tr>
-          <td><span class="id-pill">${c.crewId || '-'}</span></td>
-          <td style="font-weight: 600;">${c.name || '-'}</td>
-          <td>${c.designation || '-'}</td>
-          <td><span class="tag-category">${c.category || '-'}</span></td>
-          <td style="color: var(--text-dim); font-size: 0.8rem;">${c.cadre || '-'}</td>
-        </tr>
-      `).join('');
-    }
-
-    // 2. Render SECR Stations Table
-    function renderStations(query) {
-      const tbody = document.getElementById('stationsTableBody');
-      const filtered = stationsData.filter(st => {
-        if (!query) return true;
-        return (st.code && st.code.toLowerCase().includes(query)) ||
-               (st.name && st.name.toLowerCase().includes(query)) ||
-               (st.cugMobile && String(st.cugMobile).toLowerCase().includes(query)) ||
-               (st.landline && String(st.landline).toLowerCase().includes(query)) ||
-               (st.section && st.section.toLowerCase().includes(query));
-      });
-
-      document.getElementById('filterStatus').textContent = `Showing ${filtered.length} of ${stationsData.length} stations`;
-
-      if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No stations match "${query}"</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = filtered.map(st => `
-        <tr>
-          <td style="color:var(--text-dim); font-family:var(--font-mono);">${st.sNo || '-'}</td>
-          <td class="code-cell">${st.code || '-'}</td>
-          <td style="font-weight:600;">${st.name || '-'}</td>
-          <td>${formatPhone(st.cugMobile)}</td>
-          <td>${st.landline ? formatPhone(st.landline) : '<span style="color:var(--text-dim);">-</span>'}</td>
-          <td style="color:var(--text-muted); font-size: 0.82rem;">${st.section || '-'}</td>
-        </tr>
-      `).join('');
-    }
-
-    // 3. Render Grouped Lobbies Directory
-    function renderDirectory(query) {
-      const container = document.getElementById('directoryContainer');
-      const lobbies = directoryData.lobbies || [];
-      let totalVisibleContacts = 0;
-      let totalContacts = 0;
-
-      // Filter grouped structure: Lobby -> Categories -> Contacts
-      const filteredLobbies = [];
-      lobbies.forEach(lobby => {
-        const matchingCategories = [];
-        (lobby.categories || []).forEach(cat => {
-          totalContacts += (cat.contacts || []).length;
-          const matchingContacts = (cat.contacts || []).filter(c => {
-            if (!query) return true;
-            return (c.name && c.name.toLowerCase().includes(query)) ||
-                   (c.designation && c.designation.toLowerCase().includes(query)) ||
-                   (c.mobile && String(c.mobile).includes(query)) ||
-                   (c.cug && String(c.cug).includes(query)) ||
-                   (cat.category && cat.category.toLowerCase().includes(query)) ||
-                   (lobby.name && lobby.name.toLowerCase().includes(query)) ||
-                   (lobby.code && lobby.code.toLowerCase().includes(query));
-          });
-
-          if (matchingContacts.length > 0) {
-            totalVisibleContacts += matchingContacts.length;
-            matchingCategories.push({
-              category: cat.category,
-              contacts: matchingContacts
-            });
-          }
-        });
-
-        if (matchingCategories.length > 0) {
-          filteredLobbies.push({
-            name: lobby.name,
-            code: lobby.code,
-            categories: matchingCategories
-          });
+    // LocalStorage Helper
+    const DB = {
+      get: (key, fallback) => {
+        try {
+          const val = localStorage.getItem(`kharsia_${key}`);
+          return val ? JSON.parse(val) : fallback;
+        } catch(e) {
+          return fallback;
         }
-      });
-
-      document.getElementById('filterStatus').textContent = `Showing ${totalVisibleContacts} contacts across ${filteredLobbies.length} lobbies`;
-
-      if (filteredLobbies.length === 0) {
-        container.innerHTML = `<div class="empty-state">No contacts found matching "${query}"</div>`;
-        return;
+      },
+      set: (key, val) => {
+        try {
+          localStorage.setItem(`kharsia_${key}`, JSON.stringify(val));
+        } catch(e) {}
       }
+    };
 
-      container.innerHTML = filteredLobbies.map(lobby => `
-        <div class="lobby-group">
-          <div class="lobby-header">
-            <div class="lobby-title">
-              <span class="code-cell" style="font-size: 1.15rem; background: var(--surface-elevated); padding: 0.2rem 0.6rem; border-radius: 6px;">${lobby.code}</span>
-              <span>${lobby.name}</span>
+    // Default Seed Data
+    const defaultPrRecords = [
+      { id: 'PR-101', crewId: 'KHS1004', crewName: 'ABHISHEK KUMAR', designation: 'Loco Pilot (Goods)', signoff: '2026-09-28 04:30', duration: '30 Hours', mobile: '7024219230', remarks: 'Relieved from N-BSP BOXN', status: 'Pending' },
+      { id: 'PR-102', crewId: 'KHS1012', crewName: 'ANJANI KUMAR', designation: 'Loco Pilot (Goods)', signoff: '2026-09-27 22:15', duration: '40 Hours', mobile: '7024149583', remarks: 'Completed weekly trip', status: 'Approved' },
+      { id: 'PR-103', crewId: 'BSP1022', crewName: 'M.P. SAHU', designation: 'Assistant Loco Pilot', signoff: '2026-09-28 06:00', duration: '30 Hours', mobile: '9752442189', remarks: 'Relieved at Kharsia', status: 'Pending' }
+    ];
+
+    const defaultStoreRecords = [
+      { id: 'ST-01', serial: 'WT-KHS-014', item: 'Walkie-Talkie (VHF Set)', crewId: 'KHS1008', crewName: 'AJAY KUMAR', train: '12834 Express', time: '2026-09-28 05:45', issuedBy: 'CC Desk', status: 'ISSUED' },
+      { id: 'ST-02', serial: 'TC-KHS-022', item: 'Tri-Color LED Torch', crewId: 'KHS1015', crewName: 'ARVIND KUMAR', train: 'BOXN N-RIG', time: '2026-09-28 06:10', issuedBy: 'CC Desk', status: 'ISSUED' },
+      { id: 'ST-03', serial: 'TL-KHS-007', item: 'Loco Flasher / Tail Lamp', crewId: 'BSP1044', crewName: 'SUNIL KUMAR PATEL', train: 'DN Goods', time: '2026-09-28 03:20', issuedBy: 'CC Desk', status: 'ISSUED' }
+    ];
+
+    const defaultLhRecords = [
+      { id: 'LH-01', train: 'BOXN / N-RIG', loco: 'WAG9-31245', crewId: 'KHS1019', crewName: 'AYODHYA PRASAD', signon: '2026-09-27 18:30', section: 'Robertson (ROB) Siding', reason: 'Precedence to Coaching Trains', reliefStatus: 'Relief Required Urgently', hours: 11.5 },
+      { id: 'LH-02', train: 'BCN / E-BSP', loco: 'WAG9-32401', crewId: 'BSP1018', crewName: 'RAJESH KUMAR', signon: '2026-09-27 16:00', section: 'Champa Outer', reason: 'Track Maintenance Block', reliefStatus: 'Relief Crew Dispatched by Jeep', hours: 14.0 }
+    ];
+
+    const defaultJeeps = [
+      { plate: 'CG-13-UD-0101', model: 'Mahindra Bolero', driver: 'Rajendra Patel', phone: '6265395782', status: 'Available' },
+      { plate: 'CG-13-UD-0102', model: 'Cruiser Trax', driver: 'Deepak Sahu', phone: '8817361305', status: 'On Trip (ROB)' },
+      { plate: 'CG-13-UE-0205', model: 'Mahindra Bolero', driver: 'Sagar', phone: '9770612511', status: 'Available' },
+      { plate: 'OD-16-A-5432', model: 'Bolero Camper', driver: 'Bhag Singh', phone: '9081175369', status: 'Available' },
+      { plate: 'CG-13-UF-0331', model: 'Mahindra Bolero', driver: 'Dilip Kumar', phone: '8817842929', status: 'On Trip (RIG)' },
+      { plate: 'CG-13-UE-0412', model: 'Bolero Neo', driver: 'Pappu Chouhan', phone: '7999810631', status: 'Available' }
+    ];
+
+    const defaultLrRecords = [
+      { id: 'LR-01', crewId: 'KHS1001', crewName: 'A K PRIYADARSHI', section: 'Kharsia (KHS) – Raigarh (RIG) 3rd Line', lastTrip: '2026-09-20', tripType: 'Day & Night Trip Both', validTill: '2026-12-20', status: 'VALID' },
+      { id: 'LR-02', crewId: 'KHS1008', crewName: 'AJAY KUMAR', section: 'Kharsia (KHS) – Dharamjaigarh (CERL Coal Line)', lastTrip: '2026-09-15', tripType: 'Day & Night Trip Both', validTill: '2026-12-15', status: 'VALID' }
+    ];
+
+    // State
+    let prList = DB.get('prs', defaultPrRecords);
+    let storeList = DB.get('stores', defaultStoreRecords);
+    let lhList = DB.get('lhs', defaultLhRecords);
+    let jeepList = DB.get('jeeps', defaultJeeps);
+    let lrList = DB.get('lrs', defaultLrRecords);
+
+    // ==========================================
+    // PR FUNCTIONS
+    // ==========================================
+    function renderPrTable() {
+      const q = (document.getElementById('pr-search')?.value || '').trim().toLowerCase();
+      const tbody = document.getElementById('pr-table-body');
+      if (!tbody) return;
+
+      const filtered = prList.filter(p => 
+        !q || p.crewId.toLowerCase().includes(q) || p.crewName.toLowerCase().includes(q) || p.remarks.toLowerCase().includes(q)
+      );
+
+      tbody.innerHTML = filtered.length ? filtered.map(p => `
+        <tr>
+          <td><span class="badge badge-gold">${p.crewId}</span></td>
+          <td><strong>${p.crewName}</strong></td>
+          <td><span style="font-size:0.8rem; color:#94a3b8;">${p.designation}</span></td>
+          <td>${p.signoff}</td>
+          <td><span class="badge badge-blue">${p.duration}</span></td>
+          <td><a href="tel:${p.mobile}" style="color:var(--green); text-decoration:none; font-weight:600;">📞 ${p.mobile}</a></td>
+          <td>${p.remarks || '-'}</td>
+          <td>
+            <span class="badge ${p.status === 'Approved' ? 'badge-green' : 'badge-gold'}">${p.status}</span>
+          </td>
+          <td>
+            ${p.status === 'Pending' ? 
+              `<button class="btn-action" onclick="approvePr('${p.id}')">Approve</button>` : 
+              `<span style="color:var(--green); font-size:0.8rem;">✓ Approved</span>`
+            }
+          </td>
+        </tr>
+      `).join('') : `<tr><td colspan="9" style="text-align:center; padding:2rem; color:var(--text-dim);">No PR entries found.</td></tr>`;
+
+      // Update counters
+      document.getElementById('pr-stat-total').textContent = prList.length;
+      document.getElementById('pr-stat-pending').textContent = prList.filter(p => p.status === 'Pending').length;
+      document.getElementById('pr-stat-approved').textContent = prList.filter(p => p.status === 'Approved').length;
+      document.getElementById('badge-pr-count').textContent = prList.filter(p => p.status === 'Pending').length;
+    }
+
+    function handlePrSubmit(e) {
+      e.preventDefault();
+      const newPr = {
+        id: 'PR-' + Date.now().toString().slice(-4),
+        crewId: document.getElementById('pr-crew-id').value.trim().toUpperCase(),
+        crewName: document.getElementById('pr-crew-name').value.trim().toUpperCase(),
+        designation: document.getElementById('pr-designation').value,
+        signoff: document.getElementById('pr-signoff-time').value.replace('T', ' '),
+        duration: document.getElementById('pr-duration').value,
+        mobile: document.getElementById('pr-mobile').value.trim() || '9752400000',
+        remarks: document.getElementById('pr-remarks').value.trim(),
+        status: 'Pending'
+      };
+      prList.unshift(newPr);
+      DB.set('prs', prList);
+      renderPrTable();
+      e.target.reset();
+      alert(`Periodical Rest remark registered successfully for ${newPr.crewName} (${newPr.crewId})!`);
+    }
+
+    function approvePr(id) {
+      prList = prList.map(p => p.id === id ? { ...p, status: 'Approved' } : p);
+      DB.set('prs', prList);
+      renderPrTable();
+    }
+
+    // ==========================================
+    // STORE FUNCTIONS
+    // ==========================================
+    function renderStoreTable() {
+      const q = (document.getElementById('store-search')?.value || '').trim().toLowerCase();
+      const tbody = document.getElementById('store-table-body');
+      if (!tbody) return;
+
+      const filtered = storeList.filter(s => 
+        !q || s.serial.toLowerCase().includes(q) || s.crewName.toLowerCase().includes(q) || s.item.toLowerCase().includes(q)
+      );
+
+      tbody.innerHTML = filtered.length ? filtered.map(s => `
+        <tr>
+          <td><span class="badge badge-gold">${s.serial}</span></td>
+          <td><strong>${s.item}</strong></td>
+          <td>${s.crewName} (${s.crewId})</td>
+          <td>${s.train || '-'}</td>
+          <td>${s.time}</td>
+          <td>${s.issuedBy}</td>
+          <td><span class="badge ${s.status === 'ISSUED' ? 'badge-gold' : 'badge-green'}">${s.status}</span></td>
+          <td>
+            ${s.status === 'ISSUED' ? 
+              `<button class="btn-action" onclick="returnStore('${s.id}')">Return</button>` : 
+              `<span style="color:var(--green); font-size:0.8rem;">Returned</span>`
+            }
+          </td>
+        </tr>
+      `).join('') : `<tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--text-dim);">No active store items.</td></tr>`;
+
+      document.getElementById('badge-store-count').textContent = storeList.filter(s => s.status === 'ISSUED').length;
+    }
+
+    function handleStoreIssue(e) {
+      e.preventDefault();
+      const nowStr = new Date().toISOString().slice(0,16).replace('T', ' ');
+      const newStore = {
+        id: 'ST-' + Date.now().toString().slice(-4),
+        serial: document.getElementById('store-serial').value.trim().toUpperCase(),
+        item: document.getElementById('store-item-type').value,
+        crewId: document.getElementById('store-crew-id').value.trim().toUpperCase(),
+        crewName: document.getElementById('store-crew-name').value.trim().toUpperCase(),
+        train: document.getElementById('store-train').value.trim(),
+        time: nowStr,
+        issuedBy: document.getElementById('store-issued-by').value.trim(),
+        status: 'ISSUED'
+      };
+      storeList.unshift(newStore);
+      DB.set('stores', storeList);
+      renderStoreTable();
+      e.target.reset();
+      alert(`Equipment ${newStore.item} (S/N: ${newStore.serial}) issued to ${newStore.crewName}!`);
+    }
+
+    function returnStore(id) {
+      storeList = storeList.map(s => s.id === id ? { ...s, status: 'RETURNED' } : s);
+      DB.set('stores', storeList);
+      renderStoreTable();
+    }
+
+    // ==========================================
+    // LONG HOUR FUNCTIONS
+    // ==========================================
+    function renderLhTable() {
+      const q = (document.getElementById('lh-search')?.value || '').trim().toLowerCase();
+      const tbody = document.getElementById('lh-table-body');
+      if (!tbody) return;
+
+      const filtered = lhList.filter(l => 
+        !q || l.train.toLowerCase().includes(q) || l.crewName.toLowerCase().includes(q) || l.section.toLowerCase().includes(q)
+      );
+
+      tbody.innerHTML = filtered.length ? filtered.map(l => {
+        const isCritical = (l.hours || 0) >= 12;
+        return `
+          <tr>
+            <td><strong>${l.train}</strong><br><small style="color:var(--text-dim);">${l.loco || '-'}</small></td>
+            <td>${l.crewName} (${l.crewId})</td>
+            <td>${l.signon}</td>
+            <td><span class="badge ${isCritical ? 'badge-red' : 'badge-gold'}">${l.hours ? l.hours + ' hrs' : '>9 hrs'}</span></td>
+            <td>${l.section}</td>
+            <td>${l.reason}</td>
+            <td><span class="badge badge-blue">${l.reliefStatus}</span></td>
+            <td>
+              <button class="btn-action" onclick="resolveLh('${l.id}')">Relieved</button>
+            </td>
+          </tr>
+        `;
+      }).join('') : `<tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--text-dim);">No active long hour duties.</td></tr>`;
+
+      // Stat counters
+      document.getElementById('lh-stat-12').textContent = lhList.filter(l => (l.hours || 0) >= 12).length;
+      document.getElementById('lh-stat-9').textContent = lhList.filter(l => (l.hours || 0) >= 9 && (l.hours || 0) < 12).length;
+      document.getElementById('lh-stat-relief').textContent = lhList.filter(l => l.reliefStatus.includes('Dispatched')).length;
+      document.getElementById('badge-longhour-count').textContent = lhList.length;
+    }
+
+    function handleLhSubmit(e) {
+      e.preventDefault();
+      const signonVal = document.getElementById('lh-signon-time').value;
+      const signonDate = new Date(signonVal);
+      const now = new Date();
+      const diffHours = Math.max(9.0, Math.round(((now - signonDate) / (1000 * 60 * 60)) * 10) / 10);
+
+      const newLh = {
+        id: 'LH-' + Date.now().toString().slice(-4),
+        train: document.getElementById('lh-train').value.trim().toUpperCase(),
+        loco: document.getElementById('lh-loco').value.trim().toUpperCase(),
+        crewId: document.getElementById('lh-crew-id').value.trim().toUpperCase(),
+        crewName: document.getElementById('lh-crew-name').value.trim().toUpperCase(),
+        signon: signonVal.replace('T', ' '),
+        section: document.getElementById('lh-section').value.trim(),
+        reason: document.getElementById('lh-reason').value,
+        reliefStatus: document.getElementById('lh-relief-status').value,
+        hours: diffHours
+      };
+      lhList.unshift(newLh);
+      DB.set('lhs', lhList);
+      renderLhTable();
+      e.target.reset();
+      alert(`Long Hour duty alert recorded for Train ${newLh.train}!`);
+    }
+
+    function resolveLh(id) {
+      lhList = lhList.filter(l => l.id !== id);
+      DB.set('lhs', lhList);
+      renderLhTable();
+    }
+
+    // ==========================================
+    // JEEP FUNCTIONS
+    // ==========================================
+    function renderJeeps() {
+      const grid = document.getElementById('jeep-fleet-grid');
+      if (grid) {
+        grid.innerHTML = jeepList.map(j => `
+          <div style="background:var(--surface-elevated); border:1px solid var(--border); padding:1rem; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:800; color:#ffffff; font-family:var(--font-mono);">${j.plate}</div>
+              <div style="font-size:0.8rem; color:var(--text-muted);">${j.model} • ${j.driver}</div>
+              <a href="tel:${j.phone}" style="font-size:0.8rem; color:var(--green); text-decoration:none; font-weight:600;">📞 ${j.phone}</a>
             </div>
-            <div class="tag-category">${lobby.categories.length} Categories</div>
+            <span class="badge ${j.status === 'Available' ? 'badge-green' : 'badge-gold'}">${j.status}</span>
           </div>
-          ${lobby.categories.map(cat => `
-            <div class="category-group">
-              <div class="category-header">
-                <span>📂 ${cat.category}</span>
-                <span class="tab-badge" style="font-size: 0.7rem;">${cat.contacts.length}</span>
-              </div>
-              <div class="table-container" style="margin-bottom:0;">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Designation</th>
-                      <th>Mobile</th>
-                      <th>CUG</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${cat.contacts.map(c => `
-                      <tr>
-                        <td style="font-weight: 600;">${c.name || '-'}</td>
-                        <td style="color: var(--text-muted);">${c.designation || '-'}</td>
-                        <td>${formatPhone(c.mobile)}</td>
-                        <td>${c.cug ? formatPhone(c.cug) : '<span style="color:var(--text-dim);">-</span>'}</td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          `).join('')}
-        </div>
+        `).join('');
+      }
+
+      const tbody = document.getElementById('jeep-table-body');
+      const tripHistory = DB.get('jeep_trips', [
+        { plate: 'CG-13-UD-0102', driver: 'Deepak Sahu', dest: 'Robertson (ROB)', purpose: 'Crew Relief on Line', time: '2026-09-28 05:30', meter: '54210', status: 'ON ROAD' }
+      ]);
+      if (tbody) {
+        tbody.innerHTML = tripHistory.map(t => `
+          <tr>
+            <td><strong>${t.plate}</strong></td>
+            <td>${t.driver}</td>
+            <td>${t.dest}</td>
+            <td>${t.purpose}</td>
+            <td>${t.time}</td>
+            <td>${t.meter} KM</td>
+            <td><span class="badge badge-gold">${t.status}</span></td>
+            <td><button class="btn-action" onclick="completeJeepTrip('${t.plate}')">Mark Returned</button></td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    function handleJeepSubmit(e) {
+      e.preventDefault();
+      const trips = DB.get('jeep_trips', []);
+      const newTrip = {
+        plate: document.getElementById('jeep-vehicle').value,
+        driver: document.getElementById('jeep-driver').value.trim(),
+        dest: document.getElementById('jeep-destination').value.trim(),
+        purpose: document.getElementById('jeep-purpose').value,
+        time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        meter: document.getElementById('jeep-meter-out').value || '54250',
+        status: 'ON ROAD'
+      };
+      trips.unshift(newTrip);
+      DB.set('jeep_trips', trips);
+
+      // Update vehicle status
+      jeepList = jeepList.map(j => j.plate.includes(newTrip.plate.slice(0,13)) ? { ...j, status: `On Trip (${newTrip.dest})` } : j);
+      DB.set('jeeps', jeepList);
+
+      renderJeeps();
+      e.target.reset();
+      alert(`Jeep movement logged for ${newTrip.plate} to ${newTrip.dest}!`);
+    }
+
+    function completeJeepTrip(plate) {
+      let trips = DB.get('jeep_trips', []);
+      trips = trips.filter(t => t.plate !== plate);
+      DB.set('jeep_trips', trips);
+
+      jeepList = jeepList.map(j => j.plate.includes(plate.slice(0,13)) ? { ...j, status: 'Available' } : j);
+      DB.set('jeeps', jeepList);
+      renderJeeps();
+    }
+
+    function autoFillDriver() {
+      const selected = document.getElementById('jeep-vehicle').value;
+      const found = jeepList.find(j => selected.includes(j.plate));
+      if (found) {
+        document.getElementById('jeep-driver').value = found.driver;
+        document.getElementById('jeep-driver-phone').value = found.phone;
+      }
+    }
+
+    // ==========================================
+    // LR DECLARATION FUNCTIONS
+    // ==========================================
+    function renderLrTable() {
+      const tbody = document.getElementById('lr-table-body');
+      if (!tbody) return;
+      tbody.innerHTML = lrList.map(l => `
+        <tr>
+          <td><span class="badge badge-gold">${l.crewId}</span></td>
+          <td><strong>${l.crewName}</strong></td>
+          <td>${l.section}</td>
+          <td>${l.lastTrip}</td>
+          <td><span class="badge badge-blue">${l.tripType}</span></td>
+          <td>${l.validTill}</td>
+          <td><span class="badge badge-green">${l.status}</span></td>
+        </tr>
       `).join('');
+      document.getElementById('badge-lr-count').textContent = lrList.length;
     }
 
-    // Fetch JSON datasets from data/ folder
-    async function loadData() {
-      // 1. Load Kharsia Crew Master
-      try {
-        const res = await fetch('data/kharsia_crew_master.json');
-        if (res.ok) {
-          crewData = await res.json();
-          document.getElementById('count-crew').textContent = crewData.length;
-        }
-      } catch (e) {
-        console.warn('Could not load kharsia_crew_master.json', e);
-      }
+    function handleLrSubmit(e) {
+      e.preventDefault();
+      const lastTripDate = new Date(document.getElementById('lr-last-trip').value);
+      const validTillDate = new Date(lastTripDate);
+      validTillDate.setMonth(validTillDate.getMonth() + 3); // 3 months validity
 
-      // 2. Load SECR Stations
-      try {
-        const res = await fetch('data/secr_stations.json');
-        if (res.ok) {
-          const json = await res.json();
-          stationsData = json.stations || json || [];
-          document.getElementById('count-stations').textContent = stationsData.length;
-        }
-      } catch (e) {
-        console.warn('Could not load secr_stations.json', e);
-      }
-
-      // 3. Load Directory
-      try {
-        const res = await fetch('data/kharsia_directory.json');
-        if (res.ok) {
-          directoryData = await res.json();
-          let count = 0;
-          (directoryData.lobbies || []).forEach(l => {
-            (l.categories || []).forEach(c => {
-              count += (c.contacts || []).length;
-            });
-          });
-          document.getElementById('count-directory').textContent = `${directoryData.lobbies?.length || 0} Lobbies (${count})`;
-        }
-      } catch (e) {
-        console.warn('Could not load kharsia_directory.json', e);
-      }
-
-      // 4. Load Version if present
-      try {
-        const res = await fetch('data/version.json');
-        if (res.ok) {
-          const v = await res.json();
-          if (v.version) {
-            document.getElementById('versionTag').textContent = `v${v.version}`;
-          }
-        }
-      } catch (_) {}
-
-      // Render initial view
-      renderActiveTab();
+      const newLr = {
+        id: 'LR-' + Date.now().toString().slice(-4),
+        crewId: document.getElementById('lr-crew-id').value.trim().toUpperCase(),
+        crewName: document.getElementById('lr-crew-name').value.trim().toUpperCase(),
+        section: document.getElementById('lr-section').value,
+        lastTrip: document.getElementById('lr-last-trip').value,
+        tripType: document.getElementById('lr-trip-type').value,
+        validTill: validTillDate.toISOString().slice(0, 10),
+        status: 'VALID'
+      };
+      lrList.unshift(newLr);
+      DB.set('lrs', lrList);
+      renderLrTable();
+      e.target.reset();
+      alert(`LR Declaration saved for ${newLr.crewName} on ${newLr.section}! Valid till ${newLr.validTill}.`);
     }
 
-    // Resolve GitHub Release Info Dynamically
-    async function fetchLatestRelease() {
-      const downloadBtn = document.getElementById('downloadBtn');
-      const versionTag = document.getElementById('versionTag');
+    // Initialize all tables on load
+    window.addEventListener('DOMContentLoaded', () => {
+      renderPrTable();
+      renderStoreTable();
+      renderLhTable();
+      renderJeeps();
+      renderLrTable();
+      autoFillDriver();
 
-      try {
-        const res = await fetch(GITHUB_API_URL);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const release = await res.json();
-
-        if (release && release.tag_name) {
-          versionTag.textContent = release.tag_name;
-        }
-
-        // Look for .apk asset
-        if (release.assets && release.assets.length > 0) {
-          const apk = release.assets.find(a => a.name.toLowerCase().endsWith('.apk'));
-          if (apk && apk.browser_download_url) {
-            downloadBtn.href = apk.browser_download_url;
-            downloadBtn.setAttribute('download', apk.name);
-          }
-        }
-      } catch (err) {
-        console.log('Using default release fallback URL:', err.message);
-        // Fallback to releases page
-        downloadBtn.href = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/releases`;
-      }
-    }
-
-    // Init on DOMContentLoaded
-    document.addEventListener('DOMContentLoaded', () => {
-      loadData();
-      fetchLatestRelease();
+      // Pre-fill today's date in forms
+      const nowIso = new Date().toISOString().slice(0,16);
+      if (document.getElementById('pr-signoff-time')) document.getElementById('pr-signoff-time').value = nowIso;
+      if (document.getElementById('lh-signon-time')) document.getElementById('lh-signon-time').value = nowIso;
+      if (document.getElementById('lr-last-trip')) document.getElementById('lr-last-trip').value = new Date().toISOString().slice(0,10);
     });
   </script>
 </body>

@@ -46,10 +46,6 @@ export function renderMainMenuView() {
     <!-- Quick Stats Grid -->
     <div class="stats-grid">
       <div class="stat-box">
-        <span class="num">${lobbies.length || 14}</span>
-        <span class="label">Lobbies In Directory</span>
-      </div>
-      <div class="stat-box">
         <span class="num" style="color: #64B5F6;">${pendingPr}</span>
         <span class="label">Pending PR Remarks</span>
       </div>
@@ -61,22 +57,28 @@ export function renderMainMenuView() {
         <span class="num" style="color: #00E676;">${availableJeeps}</span>
         <span class="label">Available Jeeps</span>
       </div>
+      <div class="stat-box">
+        <span class="num" style="color: #FFB74D;">24/7</span>
+        <span class="label">Lobby Operations</span>
+      </div>
     </div>
 
-    <!-- 7 Main Menu Navigation Cards (matching Android exactly) -->
+    <!-- Main Menu Navigation Cards (Staff Directory Removed) -->
     <div class="menu-grid">
-      <!-- 1. Staff Directory -->
-      <a href="#/directory" class="menu-card">
-        <div class="menu-icon-wrap" style="background: rgba(0, 230, 118, 0.15); color: #00E676;">
+      <!-- 1. Download Android App APK -->
+      <a href="./kharsia-lobby.apk" download="kharsia-lobby-app.apk" class="menu-card" style="border-color: rgba(0, 230, 118, 0.4); background: linear-gradient(135deg, rgba(0, 230, 118, 0.08), rgba(13, 27, 42, 0.95));">
+        <div class="menu-icon-wrap" style="background: rgba(0, 230, 118, 0.2); color: #00E676;">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
         </div>
         <div class="menu-info">
-          <h3>Staff Directory</h3>
-          <p>Call Book & Contact details of 14 lobbies</p>
+          <h3 style="color: #00E676;">Download App APK</h3>
+          <p>Download official Kharsia Lobby Android app (~26 MB)</p>
         </div>
-        <span class="menu-badge badge-active">ACTIVE &gt;</span>
+        <span class="menu-badge" style="background: rgba(0, 230, 118, 0.2); color: #00E676; border: 1px solid #00E676;">DOWNLOAD &gt;</span>
       </a>
 
       <!-- 2. PR Remark -->
@@ -141,7 +143,7 @@ export function renderMainMenuView() {
           </svg>
         </div>
         <div class="menu-info">
-          <h3>Roaster &TLC update</h3>
+          <h3>Roaster & TLC update</h3>
           <p>Shift wise roaster & TLC updates, Admin portal entry</p>
         </div>
         <span class="menu-badge badge-active">ACTIVE &gt;</span>

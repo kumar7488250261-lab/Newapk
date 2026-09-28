@@ -2,89 +2,56 @@ package com.example.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.data.Lobby
-import com.example.data.StaffContact
-import com.example.ui.theme.DarkBackgroundNavy
-import com.example.ui.theme.DarkBorderBlue
-import com.example.ui.theme.DarkCanvasBg
-import com.example.ui.theme.DarkSurfaceNavy
-import com.example.ui.theme.RailwayAmber
-import com.example.ui.theme.RailwayGold
-import com.example.ui.theme.RailwayGreen
-import com.example.ui.theme.RailwayNavy
+import com.example.data.model.LobbyInfo
+import com.example.data.repository.CrewRepository
+import com.example.ui.theme.GoldAccent
+import com.example.ui.theme.LightBackground
+import com.example.ui.theme.NavyDark
+import com.example.ui.theme.NavyPrimary
+import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.TextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LobbyDetailScreen(
-    lobby: Lobby,
+    lobbyCode: String,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-    var searchQuery by remember { mutableStateOf("") }
+    val clipboardManager = LocalClipboardManager.current
+    val repository = remember { CrewRepository(context) }
+
+    var lobbyInfo by remember { mutableStateOf<LobbyInfo?>(null) }
     var selectedCategory by remember { mutableStateOf("ALL") }
+    var isLoading by remember { mutableStateOf(true) }
 
-    val categories = listOf("ALL") + lobby.categories.map { it.category }
-
-    val allContacts = lobby.categories.flatMap { cat ->
-        if (selectedCategory == "ALL" || cat.category == selectedCategory) {
-            cat.contacts.map { contact -> cat.category to contact }
-        } else {
-            emptyList()
-        }
-    }.filter { (_, contact) ->
-        contact.name.contains(searchQuery, ignoreCase = true) ||
-                contact.designation.contains(searchQuery, ignoreCase = true) ||
-                contact.mobile.contains(searchQuery)
+    LaunchedEffect(lobbyCode) {
+        isLoading = true
+        lobbyInfo = repository.getLobby(lobbyCode)
+        isLoading = false
     }
 
     Scaffold(
@@ -93,22 +60,22 @@ fun LobbyDetailScreen(
                 title = {
                     Column {
                         Text(
-                            text = "${lobby.name} (${lobby.code})",
-                            style = MaterialTheme.typography.titleMedium,
+                            text = lobbyInfo?.name ?: "$lobbyCode Lobby",
                             fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
                             color = Color.White
                         )
                         Text(
-                            text = "Station Code: ${lobby.code} • ${lobby.totalContacts} Staff Members",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = RailwayGold
+                            text = lobbyInfo?.division ?: "SECR Bilaspur Division",
+                            fontSize = 12.sp,
+                            color = Color.White.copy(alpha = 0.8f)
                         )
                     }
                 },
                 navigationIcon = {
                     IconButton(
                         onClick = onBack,
-                        modifier = Modifier.testTag("btn_lobby_detail_back")
+                        modifier = Modifier.testTag("lobby_detail_back_button")
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -118,135 +85,162 @@ fun LobbyDetailScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = DarkBackgroundNavy
+                    containerColor = NavyPrimary
                 )
             )
         },
-        containerColor = DarkCanvasBg
+        containerColor = LightBackground
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp)
-        ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                placeholder = { Text("Search by Name, Designation, Phone...", color = Color(0xFF7E8EA6)) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null,
-                        tint = RailwayGold
-                    )
-                },
+        if (isLoading) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("input_search_contacts"),
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedBorderColor = RailwayGold,
-                    unfocusedBorderColor = DarkBorderBlue
-                )
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Section filter pills
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
             ) {
-                items(categories) { cat ->
-                    val isSelected = selectedCategory == cat
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (isSelected) RailwayGold else DarkSurfaceNavy)
-                            .border(
-                                1.dp,
-                                if (isSelected) RailwayGold else DarkBorderBlue,
-                                RoundedCornerShape(8.dp)
-                            )
-                            .clickable { selectedCategory = cat }
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Text(
-                            text = cat,
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) Color(0xFF0F1E36) else Color.White
-                        )
-                    }
+                CircularProgressIndicator(color = NavyPrimary)
+            }
+        } else if (lobbyInfo == null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Lobby details not found.")
+            }
+        } else {
+            val lobby = lobbyInfo!!
+            val totalLobbyCrew = lobby.categories.sumOf { it.contacts.size }
+
+            val categoriesList = remember(lobby) {
+                listOf("ALL") + lobby.categories.map { it.name }
+            }
+
+            val displayedCategories = remember(lobby, selectedCategory) {
+                if (selectedCategory == "ALL") {
+                    lobby.categories
+                } else {
+                    lobby.categories.filter { it.name == selectedCategory }
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
-
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
             ) {
-                items(allContacts) { (catName, contact) ->
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = DarkSurfaceNavy),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, DarkBorderBlue, RoundedCornerShape(12.dp))
-                    ) {
+                // Header Banner
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = NavyDark)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = contact.name,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = contact.designation,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = RailwayAmber,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = "Ph: ${contact.mobile}${if (contact.cug.isNotBlank()) " • CUG: ${contact.cug}" else ""}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color(0xFFA0B4D0)
-                                )
+                            Text(
+                                text = "${lobby.name} (${lobby.code})",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = Color.White
+                            )
+                            Badge(containerColor = GoldAccent, contentColor = NavyDark) {
+                                Text("$totalLobbyCrew Staff", fontWeight = FontWeight.Bold)
                             }
+                        }
+                        if (lobby.description.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = lobby.description,
+                                fontSize = 12.sp,
+                                color = Color.White.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                }
 
-                            if (contact.mobile.isNotBlank()) {
-                                Button(
-                                    onClick = {
-                                        val intent = Intent(Intent.ACTION_DIAL).apply {
-                                            data = Uri.parse("tel:${contact.mobile}")
-                                        }
-                                        context.startActivity(intent)
-                                    },
-                                    colors = ButtonDefaults.buttonColors(containerColor = RailwayGreen),
-                                    shape = RoundedCornerShape(8.dp),
-                                    modifier = Modifier.testTag("btn_call_${contact.mobile}")
+                // Category Chips
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    categoriesList.forEach { category ->
+                        FilterChip(
+                            selected = selectedCategory == category,
+                            onClick = { selectedCategory = category },
+                            label = { Text(if (category == "ALL") "All Categories ($totalLobbyCrew)" else category) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = NavyPrimary,
+                                selectedLabelColor = Color.White
+                            ),
+                            modifier = Modifier.testTag("filter_cat_${category.take(4)}")
+                        )
+                    }
+                }
+
+                // Contact list
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp)
+                ) {
+                    displayedCategories.forEach { category ->
+                        item(key = "hdr_${category.name}") {
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = NavyPrimary.copy(alpha = 0.1f)),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Call,
-                                        contentDescription = "Call",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(18.dp)
+                                    Text(
+                                        text = category.name,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp,
+                                        color = NavyDark
                                     )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Call", color = Color.White, fontWeight = FontWeight.Bold)
+                                    Badge(containerColor = NavyPrimary, contentColor = Color.White) {
+                                        Text("${category.contacts.size}", fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
+                        }
+
+                        itemsIndexed(
+                            items = category.contacts,
+                            key = { index, item ->
+                                "lobby_crew_${lobby.code}_${category.name}_${item.name}_${item.mobile}_$index"
+                            }
+                        ) { _, crew ->
+                            CrewContactCard(
+                                crew = crew.copy(lobbyCode = lobby.code, category = category.name),
+                                onCall = { mobile ->
+                                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$mobile"))
+                                    context.startActivity(intent)
+                                },
+                                onCopy = { mobile ->
+                                    clipboardManager.setText(AnnotatedString(mobile))
+                                    Toast.makeText(context, "Copied $mobile to clipboard", Toast.LENGTH_SHORT).show()
+                                }
+                            )
                         }
                     }
                 }

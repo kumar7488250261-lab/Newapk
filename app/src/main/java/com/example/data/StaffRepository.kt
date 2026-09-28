@@ -121,6 +121,28 @@ class StaffRepository(private val context: Context) {
             }
     }
 
+    fun getAllOtherLobbiesCrew(): List<OtherLobbyCrewItem> {
+        val list = mutableListOf<OtherLobbyCrewItem>()
+        for (lobby in getOtherLobbies()) {
+            for (category in lobby.categories) {
+                for (contact in category.contacts) {
+                    val phone = if (contact.mobile.isNotBlank()) contact.mobile else contact.cug
+                    list.add(
+                        OtherLobbyCrewItem(
+                            lobbyCode = lobby.code,
+                            lobbyName = lobby.name,
+                            category = category.category,
+                            name = contact.name,
+                            designation = contact.designation,
+                            mobile = phone
+                        )
+                    )
+                }
+            }
+        }
+        return list
+    }
+
     fun getKharsiaStaffItems(): List<KharsiaStaffItem> {
         val items = mutableListOf<KharsiaStaffItem>()
 
@@ -265,12 +287,52 @@ class StaffRepository(private val context: Context) {
         )
     }
 
+    private val cachedAllCrewMembers: List<CrewMember> by lazy {
+        val result = mutableListOf<CrewMember>()
+        // 1. Kharsia Crew Master
+        result.addAll(cachedCrewMembers)
+
+        // 2. All other lobbies crew
+        for (lobby in getOtherLobbies()) {
+            var counter = 1
+            for (category in lobby.categories) {
+                val catNormalized = when {
+                    category.category.contains("Goods", ignoreCase = true) || category.category.contains("LP", ignoreCase = true) -> "LP"
+                    category.category.contains("ALP", ignoreCase = true) || category.category.contains("Assistant", ignoreCase = true) -> "ALP"
+                    category.category.contains("Guard", ignoreCase = true) || category.category.contains("Manager", ignoreCase = true) || category.category.contains("TM", ignoreCase = true) -> "GUARD"
+                    category.category.contains("Shunting", ignoreCase = true) -> "SHUNTING"
+                    category.category.contains("CLI", ignoreCase = true) -> "CLI"
+                    category.category.contains("CCC", ignoreCase = true) -> "CCC"
+                    else -> "LP"
+                }
+                for (contact in category.contacts) {
+                    val phone = if (contact.mobile.isNotBlank()) contact.mobile else contact.cug
+                    val generatedId = "${lobby.code}%03d".format(counter++)
+                    result.add(
+                        CrewMember(
+                            crewId = generatedId,
+                            name = contact.name,
+                            designation = contact.designation,
+                            category = catNormalized,
+                            cadre = "${lobby.name} (${lobby.code})",
+                            mobile = phone
+                        )
+                    )
+                }
+            }
+        }
+        result
+    }
+
     fun getCrewMaster(): List<CrewMember> = cachedCrewMembers
+
+    fun getAllCrewMaster(): List<CrewMember> = cachedAllCrewMembers
 
     fun findCrewById(crewId: String): CrewMember? {
         val trimmed = crewId.trim().uppercase()
         if (trimmed.isEmpty()) return null
 
+        // 1. Search Kharsia crew first
         cachedCrewMembers.find { it.crewId.equals(trimmed, ignoreCase = true) }?.let { return it }
 
         if (trimmed.all { it.isDigit() }) {
@@ -280,15 +342,30 @@ class StaffRepository(private val context: Context) {
 
         cachedCrewMembers.find { it.crewId.endsWith(trimmed, ignoreCase = true) }?.let { return it }
 
+        // 2. Search other lobbies crew by ID (e.g. BSP001, RIG010) or mobile
+        cachedAllCrewMembers.find { it.crewId.equals(trimmed, ignoreCase = true) }?.let { return it }
+        cachedAllCrewMembers.find { it.mobile.isNotBlank() && it.mobile == trimmed }?.let { return it }
+
         return null
     }
 
     fun findCrewByName(name: String): CrewMember? {
         val trimmed = name.trim()
         if (trimmed.length < 3) return null
+
+        // Exact match in Kharsia
         cachedCrewMembers.find { it.name.equals(trimmed, ignoreCase = true) }?.let { return it }
-        val matches = cachedCrewMembers.filter { it.name.contains(trimmed, ignoreCase = true) }
-        if (matches.size == 1) return matches.first()
+        // Exact match in all lobbies
+        cachedAllCrewMembers.find { it.name.equals(trimmed, ignoreCase = true) }?.let { return it }
+
+        // Contains match in Kharsia
+        val khsMatches = cachedCrewMembers.filter { it.name.contains(trimmed, ignoreCase = true) }
+        if (khsMatches.size == 1) return khsMatches.first()
+
+        // Contains match in all lobbies
+        val allMatches = cachedAllCrewMembers.filter { it.name.contains(trimmed, ignoreCase = true) }
+        if (allMatches.isNotEmpty()) return allMatches.first()
+
         return null
     }
 
@@ -300,18 +377,21 @@ class StaffRepository(private val context: Context) {
         val q = query.trim().uppercase()
         if (q.isEmpty()) return cachedCrewMembers.take(limit)
 
-        return cachedCrewMembers.filter { crew ->
+        return cachedAllCrewMembers.filter { crew ->
             crew.crewId.uppercase().contains(q) ||
             crew.name.uppercase().contains(q) ||
             crew.designation.uppercase().contains(q) ||
-            crew.category.uppercase().contains(q)
+            crew.category.uppercase().contains(q) ||
+            crew.cadre.uppercase().contains(q) ||
+            crew.mobile.contains(q)
         }.sortedWith(
             compareBy<CrewMember> {
                 when {
                     it.crewId.uppercase() == q -> 0
                     it.crewId.uppercase().startsWith(q) -> 1
                     it.name.uppercase().startsWith(q) -> 2
-                    else -> 3
+                    it.name.uppercase().contains(q) -> 3
+                    else -> 4
                 }
             }
         ).take(limit)

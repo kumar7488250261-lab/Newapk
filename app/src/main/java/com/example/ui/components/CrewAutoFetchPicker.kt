@@ -365,14 +365,16 @@ fun CrewBrowseDialog(
     onSelect: (CrewMember) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    var selectedCategoryTab by remember { mutableStateOf(0) } // 0: ALL, 1: LP, 2: ALP
-    val allCrew = remember { staffRepository.getCrewMaster() }
+    var selectedCategoryTab by remember { mutableStateOf(0) } // 0: ALL, 1: Kharsia, 2: LP, 3: ALP, 4: TM/Guard
+    val allCrew = remember { staffRepository.getAllCrewMaster() }
 
     val filteredList = remember(searchQuery, selectedCategoryTab, allCrew) {
         allCrew.filter { crew ->
             val matchesCategory = when (selectedCategoryTab) {
-                1 -> crew.category.equals("LP", ignoreCase = true) || crew.designation.contains("LP", ignoreCase = true)
-                2 -> crew.category.equals("ALP", ignoreCase = true) || crew.designation.contains("ALP", ignoreCase = true)
+                1 -> crew.cadre.contains("Kharsia", ignoreCase = true) || crew.crewId.startsWith("KHS", ignoreCase = true)
+                2 -> crew.category.equals("LP", ignoreCase = true) || crew.designation.contains("LP", ignoreCase = true)
+                3 -> crew.category.equals("ALP", ignoreCase = true) || crew.designation.contains("ALP", ignoreCase = true)
+                4 -> crew.category.equals("GUARD", ignoreCase = true) || crew.designation.contains("Guard", ignoreCase = true) || crew.designation.contains("Manager", ignoreCase = true)
                 else -> true
             }
             val matchesSearch = if (searchQuery.isBlank()) {
@@ -381,7 +383,9 @@ fun CrewBrowseDialog(
                 val q = searchQuery.trim().uppercase()
                 crew.crewId.uppercase().contains(q) ||
                 crew.name.uppercase().contains(q) ||
-                crew.designation.uppercase().contains(q)
+                crew.designation.uppercase().contains(q) ||
+                crew.cadre.uppercase().contains(q) ||
+                crew.mobile.contains(q)
             }
             matchesCategory && matchesSearch
         }
@@ -392,13 +396,13 @@ fun CrewBrowseDialog(
         title = {
             Column {
                 Text(
-                    text = "Kharsia Crew Master Directory",
+                    text = "Division Crew Master Directory",
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
                     fontSize = 18.sp
                 )
                 Text(
-                    text = "Auto-fetch crew details across 369 Running Staff",
+                    text = "Auto-fetch crew details across Kharsia & All Division Lobbies",
                     color = RailwayGold,
                     fontSize = 12.sp
                 )
@@ -414,7 +418,7 @@ fun CrewBrowseDialog(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search by CMS ID or Name...", color = Color(0xFFA0B4D0)) },
+                    placeholder = { Text("Search by CMS ID, Name, Lobby...", color = Color(0xFFA0B4D0)) },
                     singleLine = true,
                     leadingIcon = {
                         Icon(Icons.Default.Search, contentDescription = null, tint = RailwayGold)
@@ -439,7 +443,7 @@ fun CrewBrowseDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Tabs: All, LP, ALP
+                // Tabs: All, Kharsia, LP, ALP, TM
                 TabRow(
                     selectedTabIndex = selectedCategoryTab,
                     containerColor = DarkBackgroundNavy,
@@ -454,17 +458,27 @@ fun CrewBrowseDialog(
                     Tab(
                         selected = selectedCategoryTab == 0,
                         onClick = { selectedCategoryTab = 0 },
-                        text = { Text("ALL (${allCrew.size})", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = if (selectedCategoryTab == 0) RailwayGold else Color.White) }
+                        text = { Text("ALL (${allCrew.size})", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (selectedCategoryTab == 0) RailwayGold else Color.White) }
                     )
                     Tab(
                         selected = selectedCategoryTab == 1,
                         onClick = { selectedCategoryTab = 1 },
-                        text = { Text("LP Goods", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = if (selectedCategoryTab == 1) RailwayGold else Color.White) }
+                        text = { Text("KHS", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (selectedCategoryTab == 1) RailwayGold else Color.White) }
                     )
                     Tab(
                         selected = selectedCategoryTab == 2,
                         onClick = { selectedCategoryTab = 2 },
-                        text = { Text("ALP / SALP", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = if (selectedCategoryTab == 2) RailwayGold else Color.White) }
+                        text = { Text("LP", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (selectedCategoryTab == 2) RailwayGold else Color.White) }
+                    )
+                    Tab(
+                        selected = selectedCategoryTab == 3,
+                        onClick = { selectedCategoryTab = 3 },
+                        text = { Text("ALP", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (selectedCategoryTab == 3) RailwayGold else Color.White) }
+                    )
+                    Tab(
+                        selected = selectedCategoryTab == 4,
+                        onClick = { selectedCategoryTab = 4 },
+                        text = { Text("TM", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (selectedCategoryTab == 4) RailwayGold else Color.White) }
                     )
                 }
 

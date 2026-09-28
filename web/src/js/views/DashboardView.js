@@ -45,7 +45,7 @@ export function renderDashboardView() {
                 संयुक्त चालक एवं परिचालक लॉबी • खरसिया
               </h2>
               <p style="font-size: 12.5px; color: #F59E0B; font-weight: 700; letter-spacing: 0.5px; margin-top: 2px;">
-                SECR BILASPUR DIVISION • 24x7 REAL-TIME SYNC
+                SECR BILASPUR DIVISION • REAL-TIME SYNC
               </p>
             </div>
           </div>

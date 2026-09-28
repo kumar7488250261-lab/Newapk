@@ -101,3 +101,13 @@ data class KharsiaStaffItem(
     val altMobile: String = "",
     val badge: String = ""
 )
+
+@JsonClass(generateAdapter = true)
+data class OtherLobbyCrewItem(
+    val lobbyCode: String,
+    val lobbyName: String,
+    val category: String,
+    val name: String,
+    val designation: String,
+    val mobile: String
+)
