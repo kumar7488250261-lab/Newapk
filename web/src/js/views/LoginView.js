@@ -40,22 +40,18 @@ export function renderLoginView() {
           <form id="form-login">
             <div class="form-group" style="margin-bottom: 14px;">
               <label class="form-label">Staff / Crew ID or Mobile</label>
-              <input type="text" id="l-crew-id" class="input-field" placeholder="e.g. KHS1001, KHS_ADMIN" required style="font-family: var(--font-mono); text-transform: uppercase;">
-              <small style="color: #64748B; font-size: 11px;">Enter your Kharsia Crew ID or Admin ID</small>
+              <input type="text" id="l-crew-id" class="input-field" placeholder="Enter Crew ID or Mobile" required style="font-family: var(--font-mono); text-transform: uppercase;">
+              <small style="color: #64748B; font-size: 11px;">Enter your registered Crew ID or Mobile number</small>
             </div>
 
             <div class="form-group" style="margin-bottom: 14px;">
               <label class="form-label">Password / PIN</label>
-              <input type="password" id="l-password" class="input-field" placeholder="Default: kharsia@cc" value="kharsia@cc" required>
+              <input type="password" id="l-password" class="input-field" placeholder="Enter Password / PIN" required>
             </div>
 
             <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
               Authenticate Staff
             </button>
-
-            <div style="margin-top: 16px; padding: 10px; background: rgba(56, 189, 248, 0.08); border-radius: 6px; font-size: 11.5px; color: #94A3B8; text-align: center;">
-              <strong>Admin Quick Login:</strong> User ID: <code style="color:#F59E0B;">KHS_ADMIN</code> • Pass: <code style="color:#F59E0B;">kharsia@cc</code>
-            </div>
           </form>
         ` : `
           <!-- Register Request Form -->

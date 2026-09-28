@@ -756,6 +756,7 @@ private fun OtherLobbiesTabView(
 ) {
     var selectedLobbyCode by remember { mutableStateOf("ALL") }
     var selectedCategory by remember { mutableStateOf("ALL") }
+    var localSearchQuery by remember { mutableStateOf("") }
 
     val otherLobbies = remember(lobbies) {
         lobbies.filter { !it.code.equals("CTRL", ignoreCase = true) }
@@ -778,7 +779,7 @@ private fun OtherLobbiesTabView(
             val list = mutableListOf<Pair<String, Int>>()
             val total = allCrew.size
             list.add("ALL" to total)
-            val lpGoods = allCrew.count { it.category.contains("Goods", ignoreCase = true) }
+            val lpGoods = allCrew.count { it.category.contains("Goods", ignoreCase = true) && !it.category.contains("ALP", ignoreCase = true) && !it.category.contains("Assistant", ignoreCase = true) }
             if (lpGoods > 0) list.add("Loco Pilots (Goods)" to lpGoods)
             val alp = allCrew.count { it.category.contains("ALP", ignoreCase = true) || it.category.contains("Assistant", ignoreCase = true) }
             if (alp > 0) list.add("Assistant Loco Pilots (ALP)" to alp)
@@ -805,13 +806,15 @@ private fun OtherLobbiesTabView(
         selectedCategory = "ALL"
     }
 
-    // Filter crew
-    val filteredCrew = remember(allCrew, selectedLobbyCode, selectedCategory, searchQuery) {
+    val effectiveQuery = (localSearchQuery.ifBlank { searchQuery }).trim().uppercase()
+
+    // Filter crew strictly by selected Lobby, selected Category, and Search Query by Name
+    val filteredCrew = remember(allCrew, selectedLobbyCode, selectedCategory, effectiveQuery) {
         allCrew.filter { item ->
             val matchesLobby = if (selectedLobbyCode == "ALL") true else item.lobbyCode.equals(selectedLobbyCode, ignoreCase = true)
             val matchesCategory = when (selectedCategory) {
                 "ALL" -> true
-                "Loco Pilots (Goods)" -> item.category.contains("Goods", ignoreCase = true)
+                "Loco Pilots (Goods)" -> item.category.contains("Goods", ignoreCase = true) && !item.category.contains("ALP", ignoreCase = true) && !item.category.contains("Assistant", ignoreCase = true)
                 "Assistant Loco Pilots (ALP)" -> item.category.contains("ALP", ignoreCase = true) || item.category.contains("Assistant", ignoreCase = true)
                 "Train Managers (Guards)" -> item.category.contains("Guard", ignoreCase = true) || item.category.contains("Manager", ignoreCase = true) || item.category.contains("TM", ignoreCase = true)
                 "Shunting Staff" -> item.category.contains("Shunting", ignoreCase = true)
@@ -822,13 +825,10 @@ private fun OtherLobbiesTabView(
                 "Office & Misc Staff" -> item.category.contains("Office", ignoreCase = true) || item.category.contains("Miscellaneous", ignoreCase = true)
                 else -> item.category.equals(selectedCategory, ignoreCase = true)
             }
-            val matchesSearch = if (searchQuery.isBlank()) true else {
-                val q = searchQuery.trim().uppercase()
-                item.name.uppercase().contains(q) ||
-                item.mobile.contains(q) ||
-                item.designation.uppercase().contains(q) ||
-                item.lobbyCode.uppercase().contains(q) ||
-                item.category.uppercase().contains(q)
+            val matchesSearch = if (effectiveQuery.isBlank()) true else {
+                item.name.uppercase().contains(effectiveQuery) ||
+                item.mobile.contains(effectiveQuery) ||
+                item.designation.uppercase().contains(effectiveQuery)
             }
             matchesLobby && matchesCategory && matchesSearch
         }
@@ -955,6 +955,66 @@ private fun OtherLobbiesTabView(
             }
         }
 
+        // 2b. DEDICATED IN-LOBBY & CATEGORY SEARCH BAR
+        val searchPlaceholder = when {
+            selectedLobby != null && selectedCategory != "ALL" ->
+                "Search in ${selectedLobby.code} ($selectedCategory) by Name..."
+            selectedLobby != null ->
+                "Search in ${selectedLobby.name} by Name or Phone..."
+            selectedCategory != "ALL" ->
+                "Search in $selectedCategory by Name..."
+            else ->
+                "Search by Name, Designation, Phone in Other Lobbies..."
+        }
+
+        OutlinedTextField(
+            value = localSearchQuery,
+            onValueChange = { localSearchQuery = it },
+            placeholder = {
+                Text(
+                    text = searchPlaceholder,
+                    fontSize = 12.sp,
+                    color = Color(0xFFA0B4D0),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = null,
+                    tint = RailwayGold,
+                    modifier = Modifier.size(18.dp)
+                )
+            },
+            trailingIcon = {
+                if (localSearchQuery.isNotEmpty()) {
+                    IconButton(onClick = { localSearchQuery = "" }) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = "Clear",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp)
+                .testTag("input_lobby_local_search"),
+            singleLine = true,
+            shape = RoundedCornerShape(10.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedBorderColor = RailwayGold,
+                unfocusedBorderColor = DarkBorderBlue,
+                focusedContainerColor = DarkSurfaceNavy,
+                unfocusedContainerColor = DarkSurfaceNavy
+            )
+        )
+
         // 3. SELECTED LOBBY HEADER CARD (if a specific lobby is chosen)
         if (selectedLobby != null) {
             val cccContact = selectedLobby.categories
@@ -1009,19 +1069,36 @@ private fun OtherLobbiesTabView(
                         }
                     }
 
-                    if (cccContact != null && cccContact.mobile.isNotBlank()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (cccContact != null && cccContact.mobile.isNotBlank()) {
+                            IconButton(
+                                onClick = { onCall(cccContact.mobile) },
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(RailwayGreen.copy(alpha = 0.2f))
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Phone,
+                                    contentDescription = "Call CCC",
+                                    tint = RailwayGreen,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(6.dp))
+                        }
                         IconButton(
-                            onClick = { onCall(cccContact.mobile) },
+                            onClick = { onLobbyClick(selectedLobby) },
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(RailwayGreen.copy(alpha = 0.2f))
+                                .background(RailwayGold.copy(alpha = 0.2f))
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Phone,
-                                contentDescription = "Call CCC",
-                                tint = RailwayGreen,
-                                modifier = Modifier.size(18.dp)
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = "View Details",
+                                tint = RailwayGold,
+                                modifier = Modifier.size(22.dp)
                             )
                         }
                     }
