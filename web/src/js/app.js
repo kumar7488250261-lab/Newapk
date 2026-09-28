@@ -1,32 +1,43 @@
 // Kharsia Lobby - Main Application Entry & Hash Router
+// Common Multi-Client Platform with Shared Firebase Backend
 import { store } from './store.js';
 import { renderWelcomeView } from './views/WelcomeView.js';
-import { renderLandingView } from './views/LandingView.js';
 import { renderLoginView } from './views/LoginView.js';
-import { renderMainMenuView } from './views/MainMenuView.js';
-import { renderStaffDirectoryView } from './views/StaffDirectoryView.js';
+import { renderDashboardView } from './views/DashboardView.js';
+import { renderDutyView } from './views/DutyView.js';
+import { renderRosterView } from './views/RosterView.js';
+import { renderCrewView } from './views/CrewView.js';
+import { renderNotificationsView } from './views/NotificationsView.js';
+import { renderProfileView } from './views/ProfileView.js';
+import { renderAdminPanelView } from './views/AdminPanelView.js';
 import { renderPrRemarkView } from './views/PrRemarkView.js';
 import { renderStoreRegisterView } from './views/StoreRegisterView.js';
-import { renderLongHourView } from './views/LongHourView.js';
-import { renderRosterTlcView } from './views/RosterTlcView.js';
 import { renderJeepMovementView } from './views/JeepMovementView.js';
 
 const routes = {
   '#/welcome': renderWelcomeView,
-  '#/landing': renderLandingView,
+  '#/landing': renderWelcomeView,
   '#/login': renderLoginView,
-  '#/menu': renderMainMenuView,
-  '#/directory': renderStaffDirectoryView,
+  '#/dashboard': renderDashboardView,
+  '#/menu': renderDashboardView,
+  '#/duty': renderDutyView,
+  '#/longhour': renderDutyView,
+  '#/roster': renderRosterView,
+  '#/crew': renderCrewView,
+  '#/notifications': renderNotificationsView,
+  '#/profile': renderProfileView,
+  '#/admin': renderAdminPanelView,
   '#/pr': renderPrRemarkView,
   '#/store': renderStoreRegisterView,
-  '#/longhour': renderLongHourView,
-  '#/roster': renderRosterTlcView,
   '#/jeep': renderJeepMovementView
 };
 
 async function router() {
   const appContainer = document.getElementById('app');
   if (!appContainer) return;
+
+  // Initialize store if not already initialized
+  await store.init();
 
   const rawHash = window.location.hash || '#/welcome';
   const cleanHash = rawHash.split('?')[0];
@@ -44,7 +55,7 @@ async function router() {
     // Default fallback
     const auth = store.getAuth();
     if (auth.isLoggedIn) {
-      window.location.hash = '#/menu';
+      window.location.hash = '#/dashboard';
     } else {
       window.location.hash = '#/welcome';
     }
@@ -60,17 +71,17 @@ function registerServiceWorker() {
           console.log('Kharsia Lobby PWA ServiceWorker active:', reg.scope);
         })
         .catch((err) => {
-          console.warn('ServiceWorker registration error:', err);
+          console.warn('PWA ServiceWorker registration notice:', err);
         });
     });
   }
 }
 
-// Bootstrap
+// Global bootstrap
 window.addEventListener('DOMContentLoaded', async () => {
   await store.init();
-  registerServiceWorker();
-
-  window.addEventListener('hashchange', router);
   router();
+  registerServiceWorker();
 });
+
+window.addEventListener('hashchange', router);

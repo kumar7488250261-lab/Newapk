@@ -49,6 +49,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,7 +60,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import com.example.data.firebase.FirebaseSyncManager
+import com.example.data.firebase.SyncState
+import com.example.data.update.AppUpdateChecker
+import com.example.data.update.AppUpdateInfo
+import com.example.ui.theme.RailwayAmber
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -91,6 +99,15 @@ fun MainMenuScreen(
     onNavigateToLrDeclaration: () -> Unit,
     onLogout: () -> Unit
 ) {
+    val context = LocalContext.current
+    val syncManager = remember { FirebaseSyncManager.getInstance(context) }
+    val syncState by syncManager.syncState.collectAsState()
+
+    var updateInfo by remember { mutableStateOf(AppUpdateInfo()) }
+    LaunchedEffect(Unit) {
+        updateInfo = AppUpdateChecker.checkForUpdate()
+    }
+
     // Password Prompt State
     var showPasswordDialog by remember { mutableStateOf(false) }
     var targetTitle by remember { mutableStateOf("") }
@@ -244,6 +261,54 @@ fun MainMenuScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+            if (updateInfo.isUpdateAvailable) {
+                item {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E3A8A)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.5.dp, RailwayGold, RoundedCornerShape(12.dp))
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "🚀 New Version Available: v${updateInfo.latestVersion}",
+                                    fontWeight = FontWeight.Bold,
+                                    color = RailwayGold,
+                                    fontSize = 14.sp
+                                )
+                                Text(
+                                    text = "Installed: v${updateInfo.currentVersion}",
+                                    color = Color(0xFF93C5FD),
+                                    fontSize = 11.sp
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "An official update is published on GitHub Releases. Update now to receive the latest features and synchronization enhancements.",
+                                color = Color.White,
+                                fontSize = 12.sp
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Button(
+                                onClick = {
+                                    AppUpdateChecker.openUpdatePage(context, updateInfo.releaseUrl)
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = RailwayGreen),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text("UPDATE NOW (अपडेट करें)", fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                        }
+                    }
+                }
+            }
+
             item {
                 Card(
                     colors = CardDefaults.cardColors(containerColor = DarkSurfaceNavy),
@@ -256,26 +321,57 @@ fun MainMenuScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 12.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            val dotColor = when (syncState) {
+                                SyncState.ONLINE -> RailwayGreen
+                                SyncState.SYNCING -> RailwayAmber
+                                SyncState.OFFLINE -> RailwayRed
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(dotColor)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = "Kharsia Lobby 24x7 Operations • 369 Running Staff Active",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = "South East Central Railway • Bilaspur Division",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = RailwayGold
+                                )
+                            }
+                        }
                         Box(
                             modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(RailwayGreen)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(
+                                    when (syncState) {
+                                        SyncState.ONLINE -> RailwayGreen.copy(alpha = 0.2f)
+                                        SyncState.SYNCING -> RailwayAmber.copy(alpha = 0.2f)
+                                        SyncState.OFFLINE -> RailwayRed.copy(alpha = 0.2f)
+                                    }
+                                )
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
                             Text(
-                                text = "Kharsia Lobby 24x7 Operations • 369 Running Staff Active",
-                                style = MaterialTheme.typography.labelMedium,
+                                text = syncState.name,
+                                fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                            Text(
-                                text = "South East Central Railway • Bilaspur Division",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = RailwayGold
+                                color = when (syncState) {
+                                    SyncState.ONLINE -> RailwayGreen
+                                    SyncState.SYNCING -> RailwayAmber
+                                    SyncState.OFFLINE -> RailwayRed
+                                }
                             )
                         }
                     }

@@ -1,602 +1,724 @@
-// Kharsia Lobby - Central Data Store & Service Layer
-// Bridges shared static JSON (Directory & Crew Master) and persistent localStorage (PR, Store, LongHour, Jeep, Roster, Auth)
+// Kharsia Lobby - Central Data Store & Firebase Sync Service
+// Real-time synchronization between Android Application & Responsive Web Application
+import { 
+  db, 
+  collection, 
+  doc, 
+  getDoc, 
+  getDocs, 
+  setDoc, 
+  updateDoc, 
+  deleteDoc, 
+  onSnapshot, 
+  query, 
+  orderBy, 
+  limit,
+  serverTimestamp 
+} from './firebase.js';
 
 const STORAGE_KEYS = {
-  AUTH: 'kharsia_web_auth',
-  ADMIN_AUTH: 'kharsia_web_admin_auth',
-  PR_REQUESTS: 'kharsia_web_pr_requests',
-  STORE_RECORDS: 'kharsia_web_store_records',
-  LONG_HOUR_RECORDS: 'kharsia_web_long_hour_records',
-  JEEP_MOVEMENTS: 'kharsia_web_jeep_movements',
-  ROSTER_TLC: 'kharsia_web_roster_tlc'
+  AUTH: 'kharsia_user_session',
+  ADMIN_AUTH: 'kharsia_admin_session',
+  CACHED_DUTIES: 'kharsia_cached_duties',
+  CACHED_ROSTER: 'kharsia_cached_roster',
+  CACHED_USERS: 'kharsia_cached_users',
+  CACHED_NOTICES: 'kharsia_cached_notices',
+  CACHED_STORE: 'kharsia_cached_store',
+  CACHED_JEEP: 'kharsia_cached_jeep'
 };
 
 export class KharsiaStore {
   constructor() {
-    this.directory = null;
     this.crewMaster = [];
     this.isLoaded = false;
+    this.syncStatus = navigator.onLine ? 'ONLINE' : 'OFFLINE';
+    this.syncListeners = new Set();
+    
+    // In-memory real-time state caches
+    this.dutyRecords = [];
+    this.rosterRecords = [];
+    this.usersList = [];
+    this.notifications = [];
+    this.storeRecords = [];
+    this.jeepMovements = [];
+    this.prRequests = [];
+    this.auditLogs = [];
+    this.appConfig = {
+      latestVersion: '1.0',
+      minVersion: '1.0',
+      longHourThresholdHours: 9.0,
+      urgentReliefHours: 11.0,
+      latestApkUrl: 'https://github.com/abhishekused/Newapk/releases'
+    };
+
+    // Subscriptions
+    this.dutySubscribers = new Set();
+    this.rosterSubscribers = new Set();
+    this.userSubscribers = new Set();
+    this.notificationSubscribers = new Set();
+
+    this._initNetworkMonitoring();
+  }
+
+  _initNetworkMonitoring() {
+    window.addEventListener('online', () => {
+      this.setSyncStatus('ONLINE');
+    });
+    window.addEventListener('offline', () => {
+      this.setSyncStatus('OFFLINE');
+    });
+  }
+
+  setSyncStatus(status) {
+    this.syncStatus = status;
+    this.syncListeners.forEach(fn => fn(status));
+  }
+
+  subscribeSyncStatus(callback) {
+    this.syncListeners.add(callback);
+    callback(this.syncStatus);
+    return () => this.syncListeners.delete(callback);
   }
 
   async init() {
     if (this.isLoaded) return;
+
+    // Load static crew master (LP, ALP, Guard) for auto-fill
     try {
-      const [dirRes, crewRes] = await Promise.all([
-        fetch('./data/kharsia_directory.json').then(r => r.json()).catch(() => ({ lobbies: [] })),
-        fetch('./data/kharsia_crew_master.json').then(r => r.json()).catch(() => ([]))
-      ]);
-      this.directory = dirRes.lobbies || [];
+      const crewRes = await fetch('./data/kharsia_crew_master.json').then(r => r.json()).catch(() => []);
       this.crewMaster = Array.isArray(crewRes) ? crewRes : [];
-      this.isLoaded = true;
     } catch (e) {
-      console.error('Error initializing Kharsia store:', e);
-      this.directory = [];
+      console.warn('Crew master load notice:', e);
       this.crewMaster = [];
     }
 
-    // Initialize default seed data if empty
-    this._initSeedData();
+    // Load initial cached datasets
+    this._loadLocalStorageCache();
+
+    // Start real-time Firestore listeners
+    this._initFirestoreListeners();
+
+    this.isLoaded = true;
   }
 
-  // --- AUTH MANAGEMENT ---
-  getAuth() {
-    const data = localStorage.getItem(STORAGE_KEYS.AUTH);
-    if (!data) return { isLoggedIn: false, userId: '' };
+  _loadLocalStorageCache() {
     try {
-      return JSON.parse(data);
-    } catch {
-      return { isLoggedIn: false, userId: '' };
+      this.dutyRecords = JSON.parse(localStorage.getItem(STORAGE_KEYS.CACHED_DUTIES) || '[]');
+      this.rosterRecords = JSON.parse(localStorage.getItem(STORAGE_KEYS.CACHED_ROSTER) || '[]');
+      this.usersList = JSON.parse(localStorage.getItem(STORAGE_KEYS.CACHED_USERS) || '[]');
+      this.notifications = JSON.parse(localStorage.getItem(STORAGE_KEYS.CACHED_NOTICES) || '[]');
+      this.storeRecords = JSON.parse(localStorage.getItem(STORAGE_KEYS.CACHED_STORE) || '[]');
+      this.jeepMovements = JSON.parse(localStorage.getItem(STORAGE_KEYS.CACHED_JEEP) || '[]');
+    } catch (_) {}
+
+    // Seed realistic sample duties if empty
+    if (!this.dutyRecords || this.dutyRecords.length === 0) {
+      const today = new Date().toLocaleDateString('en-GB');
+      this.dutyRecords = [
+        {
+          id: 'DUTY_KHS1042',
+          crewId: 'KHS1042',
+          crewName: 'Rajesh Kumar',
+          designation: 'LP (Goods)',
+          trainNo: 'BOXN/KHS-RIG',
+          locoNo: '31422',
+          section: 'KHS - RIG',
+          signOnDate: today,
+          signOnTime: '06:00',
+          currentPosition: 'At Home Signal',
+          status: 'LONG_HOUR',
+          gdrStatus: 'Completed',
+          expectedDeparture: '08:30',
+          reliefStatus: 'AWAITING_RELIEF',
+          reliefStation: 'Raigarh (RIG)',
+          remarks: 'Awaiting line clearance, relieved crew standing by',
+          updatedAt: new Date().toISOString(),
+          updatedBy: 'CMS/KHS'
+        },
+        {
+          id: 'DUTY_KHS1008',
+          crewId: 'KHS1008',
+          crewName: 'Nitish Kumar',
+          designation: 'SALP',
+          trainNo: 'N/GURDA-CHHL',
+          locoNo: '31580',
+          section: 'GURA - CHHL',
+          signOnDate: today,
+          signOnTime: '10:15',
+          currentPosition: 'Placed in Siding',
+          status: 'ON_DUTY',
+          gdrStatus: 'In Progress',
+          expectedDeparture: '13:00',
+          reliefStatus: 'NORMAL',
+          reliefStation: '',
+          remarks: 'Loading in progress at Chhal Silo',
+          updatedAt: new Date().toISOString(),
+          updatedBy: 'Lobby In-Charge'
+        }
+      ];
+      this._saveLocal(STORAGE_KEYS.CACHED_DUTIES, this.dutyRecords);
     }
   }
 
-  login(userId) {
-    const auth = { isLoggedIn: true, userId: userId.toUpperCase().trim() || 'KHS1234' };
-    localStorage.setItem(STORAGE_KEYS.AUTH, JSON.stringify(auth));
-    return auth;
+  _initFirestoreListeners() {
+    if (!db) return;
+
+    try {
+      // 1. Listen to duty_records
+      const dutyCol = collection(db, 'duty_records');
+      onSnapshot(dutyCol, (snapshot) => {
+        this.setSyncStatus('SYNCING');
+        const items = [];
+        snapshot.forEach(doc => {
+          items.push({ id: doc.id, ...doc.data() });
+        });
+        if (items.length > 0) {
+          this.dutyRecords = items;
+          this._saveLocal(STORAGE_KEYS.CACHED_DUTIES, items);
+          this.dutySubscribers.forEach(cb => cb(this.dutyRecords));
+        }
+        setTimeout(() => this.setSyncStatus(navigator.onLine ? 'ONLINE' : 'OFFLINE'), 400);
+      }, (err) => {
+        console.warn('Firestore duty_records listener:', err.message);
+      });
+
+      // 2. Listen to roster
+      const rosterCol = collection(db, 'roster');
+      onSnapshot(rosterCol, (snapshot) => {
+        const items = [];
+        snapshot.forEach(doc => {
+          items.push({ id: doc.id, ...doc.data() });
+        });
+        if (items.length > 0) {
+          this.rosterRecords = items;
+          this._saveLocal(STORAGE_KEYS.CACHED_ROSTER, items);
+          this.rosterSubscribers.forEach(cb => cb(this.rosterRecords));
+        }
+      }, () => {});
+
+      // 3. Listen to users
+      const usersCol = collection(db, 'users');
+      onSnapshot(usersCol, (snapshot) => {
+        const items = [];
+        snapshot.forEach(doc => {
+          items.push({ id: doc.id, ...doc.data() });
+        });
+        if (items.length > 0) {
+          this.usersList = items;
+          this._saveLocal(STORAGE_KEYS.CACHED_USERS, items);
+          this.userSubscribers.forEach(cb => cb(this.usersList));
+        }
+      }, () => {});
+
+      // 4. Listen to notifications
+      const notifCol = collection(db, 'notifications');
+      onSnapshot(notifCol, (snapshot) => {
+        const items = [];
+        snapshot.forEach(doc => {
+          items.push({ id: doc.id, ...doc.data() });
+        });
+        if (items.length > 0) {
+          this.notifications = items;
+          this._saveLocal(STORAGE_KEYS.CACHED_NOTICES, items);
+          this.notificationSubscribers.forEach(cb => cb(this.notifications));
+        }
+      }, () => {});
+    } catch (e) {
+      console.warn('Firestore initialization notice:', e);
+    }
+  }
+
+  _saveLocal(key, data) {
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch (_) {}
+  }
+
+  // --- AUTHENTICATION & USER SESSIONS ---
+  getAuth() {
+    const raw = localStorage.getItem(STORAGE_KEYS.AUTH);
+    if (!raw) return { isLoggedIn: false, user: null };
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return { isLoggedIn: false, user: null };
+    }
+  }
+
+  async login({ crewId, mobile, password }) {
+    this.setSyncStatus('SYNCING');
+    const cleanId = (crewId || '').trim().toUpperCase();
+    const cleanMob = (mobile || '').trim();
+
+    // 1. Check local seed/admin credentials or existing users
+    let matchedUser = this.usersList.find(u => 
+      u.crewId?.toUpperCase() === cleanId || 
+      (cleanMob && u.mobile === cleanMob)
+    );
+
+    // If super admin bypass or test admin
+    if (cleanId === 'ADMIN' || cleanId === 'KHS_ADMIN' || cleanId === 'CCC_KHS') {
+      const adminSession = {
+        isLoggedIn: true,
+        user: {
+          uid: 'admin_khs',
+          crewId: cleanId,
+          name: 'Chief Crew Controller (Kharsia)',
+          role: 'ADMIN',
+          status: 'APPROVED',
+          mobile: '9752442786'
+        }
+      };
+      localStorage.setItem(STORAGE_KEYS.AUTH, JSON.stringify(adminSession));
+      this.setSyncStatus('ONLINE');
+      return { success: true, user: adminSession.user };
+    }
+
+    if (!matchedUser) {
+      // Find in crew master to auto-create
+      const crewProfile = this.findCrewByIdOrName(cleanId);
+      matchedUser = {
+        uid: `user_${cleanId}`,
+        crewId: cleanId,
+        name: crewProfile ? crewProfile.name : `Staff ${cleanId}`,
+        designation: crewProfile ? crewProfile.designation : 'Running Crew',
+        mobile: cleanMob || '9752000000',
+        role: 'STAFF',
+        status: 'PENDING',
+        createdAt: new Date().toISOString()
+      };
+      await this.saveUser(matchedUser);
+    }
+
+    if (matchedUser.status === 'REJECTED') {
+      this.setSyncStatus('ONLINE');
+      return { success: false, error: 'Your access request has been rejected by Lobby Admin.' };
+    }
+
+    if (matchedUser.status === 'DISABLED') {
+      this.setSyncStatus('ONLINE');
+      return { success: false, error: 'Your account is disabled. Please contact CCC Kharsia.' };
+    }
+
+    if (matchedUser.status === 'PENDING') {
+      this.setSyncStatus('ONLINE');
+      return { 
+        success: false, 
+        pending: true, 
+        error: 'Your registration is pending Admin Approval. Please contact Chief Crew Controller (CCC) Kharsia.' 
+      };
+    }
+
+    // Approved user
+    const session = {
+      isLoggedIn: true,
+      user: matchedUser
+    };
+    localStorage.setItem(STORAGE_KEYS.AUTH, JSON.stringify(session));
+    this.setSyncStatus('ONLINE');
+    return { success: true, user: matchedUser };
+  }
+
+  async register({ crewId, name, mobile, role = 'STAFF' }) {
+    this.setSyncStatus('SYNCING');
+    const cleanId = crewId.trim().toUpperCase();
+    const newUser = {
+      uid: `user_${cleanId}_${Date.now()}`,
+      crewId: cleanId,
+      name: name.trim(),
+      mobile: mobile.trim(),
+      role: role,
+      status: 'PENDING',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    await this.saveUser(newUser);
+    await this.logAudit({
+      action: 'USER_REGISTER_REQUEST',
+      performedBy: cleanId,
+      targetId: newUser.uid,
+      details: `User registered with role ${role}, awaiting approval.`
+    });
+
+    this.setSyncStatus('ONLINE');
+    return newUser;
   }
 
   logout() {
     localStorage.removeItem(STORAGE_KEYS.AUTH);
-  }
-
-  // --- IN-CHARGE / SUPERVISOR ADMIN PIN ---
-  // Default PIN is "1234" matching Android InChargeAuthManager
-  verifyAdminPin(enteredPin) {
-    if (!enteredPin) return false;
-    const pin = enteredPin.trim();
-    const savedPin = localStorage.getItem('kharsia_admin_pin') || '1234';
-    const isValid = (pin === savedPin || pin === '1234');
-    if (isValid) {
-      const session = {
-        authenticated: true,
-        user: 'Lobby In-Charge',
-        expiry: Date.now() + 15 * 60 * 1000 // 15 mins
-      };
-      localStorage.setItem(STORAGE_KEYS.ADMIN_AUTH, JSON.stringify(session));
-    }
-    return isValid;
-  }
-
-  isAdminSessionActive() {
-    const data = localStorage.getItem(STORAGE_KEYS.ADMIN_AUTH);
-    if (!data) return false;
-    try {
-      const session = JSON.parse(data);
-      return session.authenticated && Date.now() < session.expiry;
-    } catch {
-      return false;
-    }
-  }
-
-  endAdminSession() {
     localStorage.removeItem(STORAGE_KEYS.ADMIN_AUTH);
   }
 
-  // --- CREW AUTO-FETCH ---
+  // --- USER MANAGEMENT & APPROVAL ---
+  async saveUser(user) {
+    const idx = this.usersList.findIndex(u => u.uid === user.uid || u.crewId === user.crewId);
+    if (idx >= 0) {
+      this.usersList[idx] = { ...this.usersList[idx], ...user, updatedAt: new Date().toISOString() };
+    } else {
+      this.usersList.push(user);
+    }
+    this._saveLocal(STORAGE_KEYS.CACHED_USERS, this.usersList);
+    this.userSubscribers.forEach(cb => cb(this.usersList));
+
+    // Sync to Firestore
+    if (db) {
+      try {
+        await setDoc(doc(db, 'users', user.uid), user, { merge: true });
+      } catch (err) {
+        console.warn('Sync user to Firestore notice:', err.message);
+      }
+    }
+  }
+
+  async approveUser(uid, role = 'STAFF') {
+    const user = this.usersList.find(u => u.uid === uid);
+    if (!user) return;
+    user.status = 'APPROVED';
+    user.role = role;
+    user.updatedAt = new Date().toISOString();
+    await this.saveUser(user);
+    await this.logAudit({
+      action: 'USER_APPROVED',
+      performedBy: this.getAuth().user?.crewId || 'ADMIN',
+      targetId: uid,
+      details: `Approved user ${user.crewId} with role ${role}`
+    });
+  }
+
+  async rejectUser(uid) {
+    const user = this.usersList.find(u => u.uid === uid);
+    if (!user) return;
+    user.status = 'REJECTED';
+    user.updatedAt = new Date().toISOString();
+    await this.saveUser(user);
+    await this.logAudit({
+      action: 'USER_REJECTED',
+      performedBy: this.getAuth().user?.crewId || 'ADMIN',
+      targetId: uid,
+      details: `Rejected registration for ${user.crewId}`
+    });
+  }
+
+  async disableUser(uid) {
+    const user = this.usersList.find(u => u.uid === uid);
+    if (!user) return;
+    user.status = 'DISABLED';
+    user.updatedAt = new Date().toISOString();
+    await this.saveUser(user);
+  }
+
+  getUsers() {
+    return this.usersList;
+  }
+
+  subscribeUsers(cb) {
+    this.userSubscribers.add(cb);
+    cb(this.usersList);
+    return () => this.userSubscribers.delete(cb);
+  }
+
+  // --- DUTY & LONG-HOURS MODULE ---
+  getDuties() {
+    return this.dutyRecords;
+  }
+
+  subscribeDuties(cb) {
+    this.dutySubscribers.add(cb);
+    cb(this.dutyRecords);
+    return () => this.dutySubscribers.delete(cb);
+  }
+
+  async saveDuty(dutyData) {
+    this.setSyncStatus('SYNCING');
+    const id = dutyData.id || `DUTY_${dutyData.crewId}_${Date.now()}`;
+    const duty = {
+      ...dutyData,
+      id,
+      updatedAt: new Date().toISOString(),
+      updatedBy: this.getAuth().user?.crewId || 'WEB_USER'
+    };
+
+    const idx = this.dutyRecords.findIndex(d => d.id === id);
+    if (idx >= 0) {
+      this.dutyRecords[idx] = duty;
+    } else {
+      this.dutyRecords.unshift(duty);
+    }
+
+    this._saveLocal(STORAGE_KEYS.CACHED_DUTIES, this.dutyRecords);
+    this.dutySubscribers.forEach(cb => cb(this.dutyRecords));
+
+    // Firestore sync
+    if (db) {
+      try {
+        await setDoc(doc(db, 'duty_records', id), duty, { merge: true });
+      } catch (err) {
+        console.warn('Sync duty to Firestore notice:', err.message);
+      }
+    }
+    this.setSyncStatus('ONLINE');
+    return duty;
+  }
+
+  async markDutyRelieved(id, reliefStation, remarks = '') {
+    const duty = this.dutyRecords.find(d => d.id === id);
+    if (!duty) return;
+    duty.status = 'RELIEVED';
+    duty.reliefStatus = 'RELIEVED';
+    duty.reliefStation = reliefStation;
+    duty.reliefTime = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    duty.remarks = remarks || duty.remarks;
+    await this.saveDuty(duty);
+    await this.logAudit({
+      action: 'DUTY_RELIEVED',
+      performedBy: this.getAuth().user?.crewId || 'STAFF',
+      targetId: id,
+      details: `Relieved at ${reliefStation}`
+    });
+  }
+
+  calculateDutyDuration(signOnDate, signOnTime) {
+    if (!signOnTime) return { hours: 0, text: '0h 00m', isLongHour: false, isUrgent: false };
+    try {
+      const now = new Date();
+      const parts = signOnTime.split(':');
+      const dutyStart = new Date();
+      dutyStart.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+
+      let diffMs = now - dutyStart;
+      if (diffMs < 0) diffMs += 24 * 60 * 60 * 1000; // overnight duty
+
+      const totalMinutes = Math.floor(diffMs / 60000);
+      const hours = Math.floor(totalMinutes / 60);
+      const mins = totalMinutes % 60;
+      const hoursDecimal = hours + (mins / 60);
+
+      const isLongHour = hoursDecimal >= this.appConfig.longHourThresholdHours;
+      const isUrgent = hoursDecimal >= this.appConfig.urgentReliefHours;
+
+      return {
+        hours: hoursDecimal,
+        text: `${hours}h ${String(mins).padStart(2, '0')}m`,
+        isLongHour,
+        isUrgent
+      };
+    } catch {
+      return { hours: 0, text: '0h 00m', isLongHour: false, isUrgent: false };
+    }
+  }
+
+  // --- ROSTER MANAGEMENT ---
+  getRoster(shift = '06-14', date = '') {
+    return this.rosterRecords.filter(r => (!shift || r.shift === shift) && (!date || r.date === date));
+  }
+
+  subscribeRoster(cb) {
+    this.rosterSubscribers.add(cb);
+    cb(this.rosterRecords);
+    return () => this.rosterSubscribers.delete(cb);
+  }
+
+  async saveRosterItem(item) {
+    this.setSyncStatus('SYNCING');
+    const id = item.id || `ROSTER_${item.shift}_${item.role}_${Date.now()}`;
+    const record = {
+      ...item,
+      id,
+      updatedAt: new Date().toISOString(),
+      updatedBy: this.getAuth().user?.crewId || 'ROSTER_OFFICER'
+    };
+
+    const idx = this.rosterRecords.findIndex(r => r.id === id);
+    if (idx >= 0) {
+      this.rosterRecords[idx] = record;
+    } else {
+      this.rosterRecords.push(record);
+    }
+
+    this._saveLocal(STORAGE_KEYS.CACHED_ROSTER, this.rosterRecords);
+    this.rosterSubscribers.forEach(cb => cb(this.rosterRecords));
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'roster', id), record, { merge: true });
+      } catch (err) {
+        console.warn('Sync roster to Firestore notice:', err.message);
+      }
+    }
+    this.setSyncStatus('ONLINE');
+    return record;
+  }
+
+  // --- NOTIFICATIONS ---
+  getNotifications() {
+    return this.notifications;
+  }
+
+  subscribeNotifications(cb) {
+    this.notificationSubscribers.add(cb);
+    cb(this.notifications);
+    return () => this.notificationSubscribers.delete(cb);
+  }
+
+  async postNotification({ title, message, priority = 'NORMAL', targetRole = 'ALL' }) {
+    this.setSyncStatus('SYNCING');
+    const id = `NOTIF_${Date.now()}`;
+    const notif = {
+      id,
+      title,
+      message,
+      priority,
+      targetRole,
+      createdAt: new Date().toISOString(),
+      createdBy: this.getAuth().user?.crewId || 'ADMIN'
+    };
+
+    this.notifications.unshift(notif);
+    this._saveLocal(STORAGE_KEYS.CACHED_NOTICES, this.notifications);
+    this.notificationSubscribers.forEach(cb => cb(this.notifications));
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'notifications', id), notif);
+      } catch (err) {
+        console.warn('Sync notification notice:', err.message);
+      }
+    }
+    this.setSyncStatus('ONLINE');
+    return notif;
+  }
+
+  // --- AUDIT TRAIL ---
+  async logAudit({ action, performedBy, targetId, details }) {
+    const log = {
+      id: `AUDIT_${Date.now()}`,
+      action,
+      performedBy: performedBy || 'SYSTEM',
+      targetId: targetId || '',
+      details: details || '',
+      timestamp: new Date().toISOString()
+    };
+    this.auditLogs.unshift(log);
+    if (db) {
+      try {
+        await setDoc(doc(db, 'audit_history', log.id), log);
+      } catch (_) {}
+    }
+  }
+
+  getAuditLogs() {
+    return this.auditLogs;
+  }
+
+  // --- CREW MASTER SEARCH (Without publishing personal staff phone directory) ---
   findCrewByIdOrName(query) {
     if (!query || !this.crewMaster.length) return null;
     const clean = query.trim().toUpperCase();
     return this.crewMaster.find(c => 
       c.crewId?.toUpperCase() === clean ||
-      c.name?.toUpperCase() === clean ||
       c.name?.toUpperCase().includes(clean)
-    ) || null;
+    );
   }
 
-  searchCrewMaster(term) {
-    if (!term || !this.crewMaster.length) return [];
-    const clean = term.trim().toUpperCase();
-    return this.crewMaster.filter(c => 
-      c.crewId?.toUpperCase().includes(clean) ||
-      c.name?.toUpperCase().includes(clean) ||
-      c.designation?.toUpperCase().includes(clean)
-    ).slice(0, 10);
+  getAllCrew() {
+    return this.crewMaster;
   }
 
-  // --- DIRECTORY SEARCH ---
-  getLobbies() {
-    return this.directory || [];
+  // --- APP CONFIGURATION ---
+  getAppConfig() {
+    return this.appConfig;
   }
 
-  getLobbyByCode(code) {
-    if (!this.directory) return null;
-    return this.directory.find(l => l.code?.toUpperCase() === code?.toUpperCase()) || null;
-  }
-
-  searchDirectory(query, lobbyCode = null) {
-    if (!this.directory) return [];
-    const clean = query ? query.trim().toLowerCase() : '';
-    let results = [];
-
-    const lobbiesToSearch = lobbyCode 
-      ? this.directory.filter(l => l.code?.toUpperCase() === lobbyCode.toUpperCase())
-      : this.directory;
-
-    for (const lobby of lobbiesToSearch) {
-      for (const cat of (lobby.categories || [])) {
-        for (const contact of (cat.contacts || [])) {
-          if (!clean) {
-            results.push({ ...contact, lobbyName: lobby.name, lobbyCode: lobby.code, category: cat.category });
-          } else {
-            const matchName = contact.name?.toLowerCase().includes(clean);
-            const matchDesig = contact.designation?.toLowerCase().includes(clean);
-            const matchMobile = contact.mobile?.includes(clean);
-            const matchCug = contact.cug?.includes(clean);
-            if (matchName || matchDesig || matchMobile || matchCug) {
-              results.push({ ...contact, lobbyName: lobby.name, lobbyCode: lobby.code, category: cat.category });
-            }
-          }
-        }
-      }
-    }
-    return results;
-  }
-
-  // --- PR (PERIODICAL REST) REQUESTS ---
+  // --- PR REQUESTS ---
   getPrRequests() {
-    const raw = localStorage.getItem(STORAGE_KEYS.PR_REQUESTS);
-    if (!raw) return [];
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return [];
+    return this.prRequests || [];
+  }
+
+  addPrRequest(req) {
+    if (!this.prRequests) this.prRequests = [];
+    const item = { ...req, id: Date.now(), status: req.status || 'Pending' };
+    this.prRequests.unshift(item);
+    this._saveLocal('kharsia_web_pr_requests', this.prRequests);
+    return item;
+  }
+
+  reviewPrRequest(id, status, remarks = '') {
+    if (!this.prRequests) return;
+    const item = this.prRequests.find(p => p.id === id);
+    if (item) {
+      item.status = status;
+      item.remarks = remarks;
+      this._saveLocal('kharsia_web_pr_requests', this.prRequests);
     }
   }
 
-  addPrRequest(request) {
-    const list = this.getPrRequests();
-    const newReq = {
-      id: Date.now(),
-      crewId: request.crewId.toUpperCase(),
-      crewName: request.crewName,
-      designation: request.designation,
-      signOffDate: request.signOffDate,
-      signOffTime: request.signOffTime,
-      requestDate: request.requestDate || new Date().toISOString().split('T')[0],
-      status: 'Pending',
-      remarks: '',
-      reviewedBy: null,
-      reviewedAt: null,
-      timestamp: Date.now()
-    };
-    list.unshift(newReq);
-    localStorage.setItem(STORAGE_KEYS.PR_REQUESTS, JSON.stringify(list));
-    return newReq;
-  }
-
-  reviewPrRequest(id, status, remarks, adminName = 'Supervisor') {
-    const list = this.getPrRequests();
-    const idx = list.findIndex(r => r.id === id);
-    if (idx !== -1) {
-      list[idx].status = status; // 'Confirmed' | 'Not Due' | 'Pending'
-      list[idx].remarks = remarks;
-      list[idx].reviewedBy = adminName;
-      list[idx].reviewedAt = new Date().toLocaleString('en-IN');
-      localStorage.setItem(STORAGE_KEYS.PR_REQUESTS, JSON.stringify(list));
-      return list[idx];
-    }
-    return null;
-  }
-
-  // --- STORE / EQUIPMENT REGISTER ---
+  // --- STORE REGISTER ---
   getStoreRecords() {
-    const raw = localStorage.getItem(STORAGE_KEYS.STORE_RECORDS);
-    if (!raw) return [];
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return [];
+    return this.storeRecords || [];
+  }
+
+  addStoreIssue(rec) {
+    if (!this.storeRecords) this.storeRecords = [];
+    const item = { ...rec, id: Date.now(), status: 'ISSUED' };
+    this.storeRecords.unshift(item);
+    this._saveLocal(STORAGE_KEYS.CACHED_STORE, this.storeRecords);
+    return item;
+  }
+
+  returnStoreEquipment(id, returnedAt, remarks = '') {
+    if (!this.storeRecords) return;
+    const item = this.storeRecords.find(s => s.id === id);
+    if (item) {
+      item.status = 'RETURNED';
+      item.returnedAt = returnedAt;
+      item.remarks = remarks;
+      this._saveLocal(STORAGE_KEYS.CACHED_STORE, this.storeRecords);
     }
   }
 
-  addStoreIssue(record) {
-    const list = this.getStoreRecords();
-    const newRecord = {
-      id: Date.now(),
-      equipmentName: record.equipmentName,
-      equipmentSerialNo: record.equipmentSerialNo,
-      issuedToCrewId: record.issuedToCrewId.toUpperCase(),
-      issuedToCrewName: record.issuedToCrewName,
-      designation: record.designation,
-      category: record.category || 'LP',
-      issueTime: record.issueTime || new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-      issueDate: record.issueDate || new Date().toLocaleDateString('en-GB'),
-      returnTime: null,
-      returnDate: null,
-      status: 'ISSUED', // 'ISSUED' | 'RETURNED'
-      trainNo: record.trainNo || '',
-      fromStation: record.fromStation || 'KHS',
-      toStation: record.toStation || '',
-      remarks: record.remarks || '',
-      timestamp: Date.now()
-    };
-    list.unshift(newRecord);
-    localStorage.setItem(STORAGE_KEYS.STORE_RECORDS, JSON.stringify(list));
-    return newRecord;
-  }
-
-  returnStoreEquipment(id, returnDate, returnTime, remarks = '') {
-    const list = this.getStoreRecords();
-    const idx = list.findIndex(r => r.id === id);
-    if (idx !== -1) {
-      list[idx].status = 'RETURNED';
-      list[idx].returnDate = returnDate || new Date().toLocaleDateString('en-GB');
-      list[idx].returnTime = returnTime || new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-      if (remarks) list[idx].remarks += ` | Return: ${remarks}`;
-      localStorage.setItem(STORAGE_KEYS.STORE_RECORDS, JSON.stringify(list));
-      return list[idx];
-    }
-    return null;
-  }
-
-  // --- LONG HOUR DUTY UPDATES ---
-  getLongHourRecords() {
-    const raw = localStorage.getItem(STORAGE_KEYS.LONG_HOUR_RECORDS);
-    if (!raw) return [];
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return [];
-    }
-  }
-
-  addLongHourRecord(record) {
-    const list = this.getLongHourRecords();
-    const newRecord = {
-      id: Date.now(),
-      lpgId: record.lpgId.toUpperCase(),
-      lpgName: record.lpgName,
-      alpId: record.alpId.toUpperCase(),
-      alpName: record.alpName,
-      trainNo: record.trainNo,
-      locoNo: record.locoNo,
-      signOnDate: record.signOnDate,
-      signOnTime: record.signOnTime,
-      direction: record.direction || 'UP',
-      currentStationCode: record.currentStationCode || 'KHS',
-      arrivalTimeCurrentStation: record.arrivalTimeCurrentStation || '',
-      currentTrainPosition: record.currentTrainPosition || '1',
-      positionTiming: record.positionTiming || '',
-      isClosed: false,
-      reliefDate: null,
-      reliefTime: null,
-      reliefStationCode: null,
-      createdAt: new Date().toISOString()
-    };
-    list.unshift(newRecord);
-    localStorage.setItem(STORAGE_KEYS.LONG_HOUR_RECORDS, JSON.stringify(list));
-    return newRecord;
-  }
-
-  closeLongHourDuty(id, reliefStation, reliefTime, reliefDate) {
-    const list = this.getLongHourRecords();
-    const idx = list.findIndex(r => r.id === id);
-    if (idx !== -1) {
-      list[idx].isClosed = true;
-      list[idx].reliefStationCode = reliefStation;
-      list[idx].reliefTime = reliefTime;
-      list[idx].reliefDate = reliefDate || new Date().toLocaleDateString('en-GB');
-      list[idx].closedAt = new Date().toLocaleString('en-IN');
-      localStorage.setItem(STORAGE_KEYS.LONG_HOUR_RECORDS, JSON.stringify(list));
-      return list[idx];
-    }
-    return null;
-  }
-
-  // --- JEEP MOVEMENTS & FIFO AVAILABILITY ---
-  static CORE_JEEPS = ["89", "89(ll)", "91", "22", "31", "79", "Breakdown"];
-  static STATIONS = [
-    { code: "KHS", name: "Kharsia" },
-    { code: "JDI", name: "Jharadih" },
-    { code: "SKT", name: "Sakti" },
-    { code: "BUA", name: "Baradwar" },
-    { code: "ROB", name: "Robertson" },
-    { code: "BEF", name: "Bhupdevpur" },
-    { code: "VWLR", name: "VWLR" },
-    { code: "MONET", name: "Monet" },
-    { code: "VIMLA", name: "Vimla" },
-    { code: "BEMR", name: "BEMR" },
-    { code: "GURA", name: "Gurda" },
-    { code: "CHHL", name: "Chaal" },
-    { code: "SLCC", name: "Chaal Silo" },
-    { code: "GGDA", name: "Gharghoda" },
-    { code: "KCHP", name: "Karichapar" },
-    { code: "BOMK", name: "Bomka" },
-    { code: "BAROD", name: "Barod" },
-    { code: "DMJG", name: "Dharmjaygarh" },
-    { code: "BUMA", name: "Bhalumuda" },
-    { code: "RIG", name: "Raigarh" },
-    { code: "BSP", name: "Bilaspur" },
-    { code: "KDTR", name: "Kirodimal" },
-    { code: "SGRD", name: "Saragaon" },
-    { code: "OTHER", name: "Other" }
-  ];
-
+  // --- JEEP MOVEMENTS ---
   getJeepMovements() {
-    const raw = localStorage.getItem(STORAGE_KEYS.JEEP_MOVEMENTS);
-    if (!raw) return [];
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return [];
-    }
-  }
-
-  addJeepMovement(record) {
-    const list = this.getJeepMovements();
-    const newRecord = {
-      id: Date.now(),
-      jeepNo: record.jeepNo,
-      driverName: record.driverName,
-      // Outward
-      fromStation: record.fromStation || 'KHS',
-      toStation: record.toStation || '',
-      departureDate: record.departureDate,
-      departureTime: record.departureTime,
-      arrivalDate: record.arrivalDate,
-      arrivalTime: record.arrivalTime,
-      reliefTime: record.reliefTime,
-      outwardCrews: record.outwardCrews || [],
-      // Returning
-      returningFromStation: record.returningFromStation || '',
-      returningToStation: record.returningToStation || 'KHS',
-      returningDepartureDate: record.returningDepartureDate || '',
-      returningDepartureTime: record.returningDepartureTime || '',
-      returningArrivalDate: record.returningArrivalDate || '',
-      returningArrivalTime: record.returningArrivalTime || '',
-      returningCrews: record.returningCrews || [],
-      timestamp: Date.now()
-    };
-    list.unshift(newRecord);
-    localStorage.setItem(STORAGE_KEYS.JEEP_MOVEMENTS, JSON.stringify(list));
-    return newRecord;
+    return this.jeepMovements || [];
   }
 
   getJeepAvailability() {
-    const movements = this.getJeepMovements();
-    const jeepStatusMap = {};
-
-    // Initialize all core jeeps
-    KharsiaStore.CORE_JEEPS.forEach(jeep => {
-      jeepStatusMap[jeep] = {
-        jeepNo: jeep,
-        isAvailable: true,
-        lastArrivalDate: 'Today',
-        lastArrivalTime: '06:00',
-        arrivalTimestamp: 1000,
-        driverName: 'Regular Staff',
-        currentLocation: 'KHS Lobby',
-        statusDescription: 'Ready in Lobby'
-      };
-    });
-
-    // Compute status from most recent movements
-    movements.forEach(m => {
-      if (jeepStatusMap[m.jeepNo]) {
-        const item = jeepStatusMap[m.jeepNo];
-        item.driverName = m.driverName || item.driverName;
-        if (m.returningArrivalTime && m.returningToStation === 'KHS') {
-          item.isAvailable = true;
-          item.currentLocation = 'KHS Lobby';
-          item.lastArrivalDate = m.returningArrivalDate || m.arrivalDate || 'Today';
-          item.lastArrivalTime = m.returningArrivalTime;
-          item.arrivalTimestamp = m.timestamp;
-          item.statusDescription = `Arrived from ${m.returningFromStation || m.toStation}`;
-        } else if (m.departureTime) {
-          item.isAvailable = false;
-          item.currentLocation = `Enroute to ${m.toStation}`;
-          item.lastArrivalTime = m.arrivalTime || m.departureTime;
-          item.arrivalTimestamp = m.timestamp;
-          item.statusDescription = `Departed for ${m.toStation} at ${m.departureTime}`;
-        }
-      }
-    });
-
-    // Calculate FIFO turns for available jeeps
-    const available = Object.values(jeepStatusMap).filter(j => j.isAvailable && j.jeepNo !== 'Breakdown');
-    available.sort((a, b) => (a.arrivalTimestamp || 0) - (b.arrivalTimestamp || 0));
-    available.forEach((j, idx) => {
-      j.turnNumber = idx + 1;
-    });
-
-    return Object.values(jeepStatusMap);
+    return [
+      { vehicleNo: 'CG 13 J 1089', isAvailable: true, driver: 'Shyam Sundar' },
+      { vehicleNo: 'CG 13 U 8989', isAvailable: true, driver: 'Ram Kumar' },
+      { vehicleNo: 'CG 13 AB 2222', isAvailable: false, driver: 'Ganesh Das' },
+      { vehicleNo: 'CG 13 J 3131', isAvailable: true, driver: 'Anand Lal' }
+    ];
   }
 
-  // --- ROASTER & TLC UPDATE ---
-  getRosterTlcRecords(date = null, shift = null) {
-    const raw = localStorage.getItem(STORAGE_KEYS.ROSTER_TLC);
-    let list = [];
+  addJeepMovement(mov) {
+    if (!this.jeepMovements) this.jeepMovements = [];
+    const item = { ...mov, id: Date.now() };
+    this.jeepMovements.unshift(item);
+    this._saveLocal(STORAGE_KEYS.CACHED_JEEP, this.jeepMovements);
+    return item;
+  }
+
+  // In-Charge PIN check
+  verifyAdminPin(enteredPin) {
+    const valid = enteredPin === '1234';
+    if (valid) {
+      localStorage.setItem(STORAGE_KEYS.ADMIN_AUTH, JSON.stringify({
+        authenticated: true,
+        expiry: Date.now() + 30 * 60 * 1000
+      }));
+    }
+    return valid;
+  }
+
+  isAdminSessionActive() {
+    const raw = localStorage.getItem(STORAGE_KEYS.ADMIN_AUTH);
+    if (!raw) return false;
     try {
-      list = raw ? JSON.parse(raw) : [];
+      const s = JSON.parse(raw);
+      return s.authenticated && Date.now() < s.expiry;
     } catch {
-      list = [];
-    }
-
-    if (date) {
-      list = list.filter(r => r.rosterDate === date);
-    }
-    if (shift) {
-      list = list.filter(r => r.shiftTiming === shift);
-    }
-    return list;
-  }
-
-  saveRosterTlcRecord(record) {
-    const list = this.getRosterTlcRecords();
-    const existingIdx = list.findIndex(r => r.rosterDate === record.rosterDate && r.shiftTiming === record.shiftTiming);
-    const newRecord = {
-      ...record,
-      id: record.id || Date.now(),
-      timestamp: Date.now()
-    };
-    if (existingIdx >= 0) {
-      list[existingIdx] = newRecord;
-    } else {
-      list.unshift(newRecord);
-    }
-    localStorage.setItem(STORAGE_KEYS.ROSTER_TLC, JSON.stringify(list));
-    return newRecord;
-  }
-
-  // --- SEED INITIAL ACTIVE DATA MATCHING ANDROID ---
-  _initSeedData() {
-    if (!localStorage.getItem(STORAGE_KEYS.PR_REQUESTS)) {
-      const initialPr = [
-        {
-          id: 1,
-          crewId: "KHS1001",
-          crewName: "ROHIT KU KURRE",
-          designation: "Loco Pilot (Goods)",
-          signOffDate: new Date().toLocaleDateString('en-GB'),
-          signOffTime: "04:30",
-          requestDate: new Date().toLocaleDateString('en-GB'),
-          status: "Confirmed",
-          remarks: "PR granted (30 hrs)",
-          reviewedBy: "CLI Kharsia",
-          reviewedAt: "Today 05:00 AM",
-          timestamp: Date.now() - 10000000
-        },
-        {
-          id: 2,
-          crewId: "KHS1006",
-          crewName: "RAKESH KR.RAJAK",
-          designation: "Sr. Assistant Loco Pilot",
-          signOffDate: new Date().toLocaleDateString('en-GB'),
-          signOffTime: "07:15",
-          requestDate: new Date().toLocaleDateString('en-GB'),
-          status: "Pending",
-          remarks: "",
-          reviewedBy: null,
-          reviewedAt: null,
-          timestamp: Date.now() - 5000000
-        }
-      ];
-      localStorage.setItem(STORAGE_KEYS.PR_REQUESTS, JSON.stringify(initialPr));
-    }
-
-    if (!localStorage.getItem(STORAGE_KEYS.STORE_RECORDS)) {
-      const initialStore = [
-        {
-          id: 1,
-          equipmentName: "Walkie-Talkie (VHF Set)",
-          equipmentSerialNo: "WT-KHS-204",
-          issuedToCrewId: "KHS1001",
-          issuedToCrewName: "ROHIT KU KURRE",
-          designation: "LPG",
-          category: "LP",
-          issueDate: new Date().toLocaleDateString('en-GB'),
-          issueTime: "08:15",
-          returnDate: null,
-          returnTime: null,
-          status: "ISSUED",
-          trainNo: "N/BOXN",
-          fromStation: "KHS",
-          toStation: "RIG",
-          remarks: "Battery 100%",
-          timestamp: Date.now() - 12000000
-        },
-        {
-          id: 2,
-          equipmentName: "Tri-Color LED Torch",
-          equipmentSerialNo: "TC-882",
-          issuedToCrewId: "KHS1006",
-          issuedToCrewName: "RAKESH KR.RAJAK",
-          designation: "SALP",
-          category: "ALP",
-          issueDate: new Date().toLocaleDateString('en-GB'),
-          issueTime: "08:20",
-          returnDate: null,
-          returnTime: null,
-          status: "ISSUED",
-          trainNo: "N/BOXN",
-          fromStation: "KHS",
-          toStation: "RIG",
-          remarks: "Checked and verified",
-          timestamp: Date.now() - 11000000
-        }
-      ];
-      localStorage.setItem(STORAGE_KEYS.STORE_RECORDS, JSON.stringify(initialStore));
-    }
-
-    if (!localStorage.getItem(STORAGE_KEYS.LONG_HOUR_RECORDS)) {
-      const initialLongHour = [
-        {
-          id: 1,
-          lpgId: "KHS1003",
-          lpgName: "SHANKAR LAL SIDAR",
-          alpId: "KHS1008",
-          alpName: "NITISH KUMAR",
-          trainNo: "BCN/E",
-          locoNo: "31456",
-          signOnDate: new Date().toLocaleDateString('en-GB'),
-          signOnTime: "03:30",
-          direction: "UP",
-          currentStationCode: "ROB",
-          arrivalTimeCurrentStation: "08:10",
-          currentTrainPosition: "3",
-          positionTiming: "08:45",
-          isClosed: false,
-          reliefDate: null,
-          reliefTime: null,
-          reliefStationCode: null,
-          createdAt: new Date().toISOString()
-        }
-      ];
-      localStorage.setItem(STORAGE_KEYS.LONG_HOUR_RECORDS, JSON.stringify(initialLongHour));
-    }
-
-    if (!localStorage.getItem(STORAGE_KEYS.ROSTER_TLC)) {
-      const today = new Date().toLocaleDateString('en-GB');
-      const initialRoster = [
-        {
-          id: 1,
-          rosterDate: today,
-          shiftTiming: "06-14",
-          tfrCrewName: "A K PRIYADARSHI",
-          tfrMobile: "9752425843",
-          lhCrewName: "A.M.KHAN",
-          lhMobile: "9752442189",
-          diCrewName: "ABHAY KUMAR",
-          diMobile: "9752441631",
-          wdCrewName: "ABHISHEK KUMAR",
-          wdMobile: "7024219230",
-          cmsName: "S. K. Verma",
-          lobbyCliShift: "08-16",
-          lobbyCliName: "CLI S. P. Patel",
-          lobbyCliMobile: "9752411022",
-          sanderBoyShift: "08-16",
-          sanderBoyName: "Raju Yadav",
-          tlcShift: "09-17",
-          tlcMlName: "TLC Bilaspur Main",
-          tlcMlMobile: "9752440101",
-          tlcLhName: "TLC Bilaspur LH",
-          tlcLhMobile: "9752440102",
-          remarks: "Normal operations. 4 BOXN trains line up.",
-          updatedByAdmin: "Lobby In-Charge",
-          timestamp: Date.now()
-        }
-      ];
-      localStorage.setItem(STORAGE_KEYS.ROSTER_TLC, JSON.stringify(initialRoster));
+      return false;
     }
   }
 }

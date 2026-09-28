@@ -59,6 +59,11 @@ import androidx.compose.ui.unit.sp
 import com.example.data.StaffRepository
 import com.example.data.equipment.InChargeAuthManager
 import com.example.data.equipment.LongHourDutyRecord
+import com.example.data.firebase.FirebaseSyncManager
+import com.example.data.firebase.SyncState
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
 import com.example.ui.components.CrewAutoFetchPicker
 import com.example.ui.theme.DarkBackgroundNavy
 import com.example.ui.theme.DarkBorderBlue
@@ -82,6 +87,10 @@ fun LongHourUpdateScreen(
 ) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+    val context = LocalContext.current
+    val syncManager = remember { FirebaseSyncManager.getInstance(context) }
+    val syncState by syncManager.syncState.collectAsState()
 
     var selectedTab by remember { mutableStateOf(0) } // 0: Duty Entry, 1: Monitor / Relieve
     var isAdminLoggedIn by remember { mutableStateOf(inChargeAuthManager.isSessionValid) }
@@ -116,6 +125,18 @@ fun LongHourUpdateScreen(
                 status = "ON_DUTY"
             )
         )
+    }
+
+    DisposableEffect(Unit) {
+        val listener = syncManager.listenDuties { liveList ->
+            if (liveList.isNotEmpty()) {
+                records.clear()
+                records.addAll(liveList)
+            }
+        }
+        onDispose {
+            listener?.remove()
+        }
     }
 
     var crewId by remember { mutableStateOf("") }
@@ -402,25 +423,24 @@ fun LongHourUpdateScreen(
 
                                 Spacer(modifier = Modifier.height(18.dp))
 
-                                Button(
+                                 Button(
                                     onClick = {
                                         if (crewId.isNotBlank() && crewName.isNotBlank()) {
-                                            records.add(
-                                                0,
-                                                LongHourDutyRecord(
-                                                    id = System.currentTimeMillis(),
-                                                    crewId = crewId.trim(),
-                                                    crewName = crewName.trim(),
-                                                    designation = designation.trim(),
-                                                    trainNo = trainNo.trim(),
-                                                    section = section.trim(),
-                                                    signOnDate = signOnDate.trim(),
-                                                    signOnTime = signOnTime.trim(),
-                                                    dutyHours = 1.0,
-                                                    status = "ON_DUTY"
-                                                )
+                                            val newDuty = LongHourDutyRecord(
+                                                id = System.currentTimeMillis(),
+                                                crewId = crewId.trim(),
+                                                crewName = crewName.trim(),
+                                                designation = designation.trim(),
+                                                trainNo = trainNo.trim(),
+                                                section = section.trim(),
+                                                signOnDate = signOnDate.trim(),
+                                                signOnTime = signOnTime.trim(),
+                                                dutyHours = 1.0,
+                                                status = "ON_DUTY"
                                             )
-                                            submitMsg = "Sign-on duty recorded for $crewName ($trainNo)"
+                                            records.add(0, newDuty)
+                                            syncManager.syncDuty(newDuty)
+                                            submitMsg = "Sign-on duty recorded for $crewName ($trainNo) • Synced to Cloud"
                                             crewId = ""
                                             crewName = ""
                                             trainNo = ""
@@ -548,10 +568,12 @@ fun LongHourUpdateScreen(
                                         onClick = {
                                             val idx = records.indexOfFirst { it.id == record.id }
                                             if (idx != -1) {
-                                                records[idx] = record.copy(
+                                                val relieved = record.copy(
                                                     status = "RELIEVED",
                                                     reliefStation = "KHS / Relieved by TLC"
                                                 )
+                                                records[idx] = relieved
+                                                syncManager.syncDuty(relieved)
                                             }
                                         },
                                         colors = ButtonDefaults.buttonColors(containerColor = RailwayGreen),

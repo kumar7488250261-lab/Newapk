@@ -63,7 +63,14 @@ data class LongHourDutyRecord(
     val dutyHours: Double = 0.0,
     val status: String = "ON_DUTY", // ON_DUTY, RELIEVED, LONG_HOUR
     val reliefStation: String = "",
-    val remarks: String = ""
+    val remarks: String = "",
+    val locoNo: String = "",
+    val currentPosition: String = "",
+    val gdrStatus: String = "",
+    val expectedDeparture: String = "",
+    val reliefStatus: String = "",
+    val reliefTime: String = "",
+    val firestoreId: String = ""
 )
 
 data class JeepAvailabilityItem(

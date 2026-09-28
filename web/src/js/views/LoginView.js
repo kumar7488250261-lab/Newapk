@@ -1,144 +1,179 @@
-// Step 3: Login Screen
+// Login & User Registration View - Authentication & Approval Workflow
 import { store } from '../store.js';
+import { renderHeader } from '../components/Header.js';
 import { showToast } from '../components/Toast.js';
 
 export function renderLoginView() {
   const container = document.createElement('div');
   container.className = 'fade-in';
-  container.style.cssText = `
-    min-height: 100vh;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-  `;
 
-  container.innerHTML = `
-    <div class="building-backdrop">
-      <div class="building-overlay"></div>
-    </div>
+  const header = renderHeader({
+    title: 'Staff Authentication',
+    subtitle: 'SECR Kharsia Lobby Multi-Client Access',
+    showBack: true,
+    onBack: () => window.location.hash = '#/welcome'
+  });
+  container.appendChild(header);
 
-    <div class="backdrop-content" style="flex: 1; display: flex; flex-direction: column; max-width: 480px; width: 100%; margin: 0 auto; padding: 16px 20px;">
-      <!-- Top Bar with Back Arrow -->
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-        <a href="#/landing" class="btn-icon" aria-label="Go Back">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-          </svg>
-        </a>
-      </div>
+  const content = document.createElement('div');
+  content.className = 'app-content';
 
-      <!-- Identity Header -->
-      <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 20px;">
-        <div style="width: 88px; height: 88px; border-radius: 50%; background: rgba(12, 36, 59, 0.85); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; border: 1.5px solid #1E4D7A;">
-          <img src="./icons/logo.png" alt="Kharsia Lobby Emblem" width="76" height="76" class="kharsia-logo" />
-        </div>
-        <h2 style="color: #F1B748; font-size: 17px; font-weight: 700; line-height: 1.3;">
-          संयुक्त चालक एवं परिचालक लॉबी खरसिया
-        </h2>
-        <span style="color: #90A4AE; font-size: 12px; font-weight: 600; letter-spacing: 0.5px;">
-          SECR BILASPUR DIVISION
-        </span>
-      </div>
+  let isRegisterTab = false;
+  let otpSent = false;
+  let simulatedOtp = '7788';
 
-      <!-- Login Form Card -->
-      <div class="card" style="margin-bottom: 20px;">
-        <form id="login-form">
-          <div class="form-group">
-            <label class="form-label" for="login-username">USERNAME / CREW ID</label>
-            <input 
-              type="text" 
-              id="login-username" 
-              class="form-input" 
-              placeholder="e.g. KHS1001 or KHS1234" 
-              autocomplete="username" 
-              required 
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="login-password">PASSWORD</label>
-            <div style="position: relative;">
-              <input 
-                type="password" 
-                id="login-password" 
-                class="form-input" 
-                placeholder="Enter your password" 
-                autocomplete="current-password" 
-                required 
-                style="padding-right: 44px;"
-              />
-              <button type="button" id="toggle-password" class="btn-icon" style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); color: #64B5F6;" title="Toggle Password">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div id="login-error" style="display: none; background: rgba(231, 76, 60, 0.15); border: 1px solid #E74C3C; color: #FF8A80; font-size: 12px; font-weight: 600; padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 16px;"></div>
-
-          <button type="submit" id="btn-submit-login" class="btn btn-primary btn-full">
-            <span>Sign In</span>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-              <polyline points="12 19 5 12 12 19"></polyline>
-            </svg>
+  function render() {
+    content.innerHTML = `
+      <div class="card" style="max-width: 440px; margin: 20px auto; border-color: #2D466E;">
+        <!-- Tab Selector: Login / Register -->
+        <div style="display: flex; border-bottom: 2px solid #1E293B; margin-bottom: 20px;">
+          <button id="tab-login" class="tab-btn ${!isRegisterTab ? 'active' : ''}" style="flex: 1; text-align: center; justify-content: center;">
+            <span>Staff Sign In</span>
           </button>
-        </form>
-      </div>
-
-      <!-- Security Notice Card -->
-      <div class="card" style="padding: 14px 18px; display: flex; align-items: center; gap: 12px; background: rgba(11, 25, 42, 0.8);">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F1B748" stroke-width="2" style="flex-shrink: 0;">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-        </svg>
-        <div style="font-size: 11px; color: #90A4AE; line-height: 1.3;">
-          <strong style="color: #FFFFFF;">Authorized Railway Personnel Only.</strong> Access is logged and monitored per Indian Railways IT Security guidelines.
+          <button id="tab-register" class="tab-btn ${isRegisterTab ? 'active' : ''}" style="flex: 1; text-align: center; justify-content: center;">
+            <span>Register Access</span>
+          </button>
         </div>
+
+        ${!isRegisterTab ? `
+          <!-- Sign In Form -->
+          <form id="form-login">
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label">Staff / Crew ID or Mobile</label>
+              <input type="text" id="l-crew-id" class="input-field" placeholder="e.g. KHS1001, KHS_ADMIN" required style="font-family: var(--font-mono); text-transform: uppercase;">
+              <small style="color: #64748B; font-size: 11px;">Enter your Kharsia Crew ID or Admin ID</small>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label">Password / PIN</label>
+              <input type="password" id="l-password" class="input-field" placeholder="Default: kharsia@cc" value="kharsia@cc" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+              Authenticate Staff
+            </button>
+
+            <div style="margin-top: 16px; padding: 10px; background: rgba(56, 189, 248, 0.08); border-radius: 6px; font-size: 11.5px; color: #94A3B8; text-align: center;">
+              <strong>Admin Quick Login:</strong> User ID: <code style="color:#F59E0B;">KHS_ADMIN</code> • Pass: <code style="color:#F59E0B;">kharsia@cc</code>
+            </div>
+          </form>
+        ` : `
+          <!-- Register Request Form -->
+          <form id="form-register">
+            <p style="font-size: 12px; color: #94A3B8; margin-bottom: 14px;">
+              New staff registrations require Chief Crew Controller (CCC) approval before accessing running lobby records.
+            </p>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label">Crew ID (Auto-verifies with Master)</label>
+              <input type="text" id="r-crew-id" class="input-field" placeholder="e.g. KHS1042" required style="font-family: var(--font-mono); text-transform: uppercase;">
+              <div id="r-match-badge" style="font-size: 12px; color: #10B981; margin-top: 4px; font-weight: 600;"></div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label">Full Name</label>
+              <input type="text" id="r-name" class="input-field" placeholder="Staff Name" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label">Mobile Number</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="tel" id="r-mobile" class="input-field" placeholder="10-digit Mobile / CUG" required style="font-family: var(--font-mono);">
+                <button type="button" id="btn-send-otp" class="btn btn-outline" style="white-space: nowrap; font-size: 12px;">
+                  ${otpSent ? 'Resend OTP' : 'Send OTP'}
+                </button>
+              </div>
+            </div>
+
+            ${otpSent ? `
+              <div class="form-group fade-in" style="margin-bottom: 12px; background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 6px; border: 1px dashed #10B981;">
+                <label class="form-label" style="color: #10B981;">Enter 4-Digit Verification Code (OTP)</label>
+                <input type="text" id="r-otp" class="input-field" placeholder="Enter ${simulatedOtp}" value="${simulatedOtp}" required style="font-family: var(--font-mono); text-align: center; letter-spacing: 4px; font-size: 16px;">
+                <small style="color: #34D399; font-size: 11px;">Verification OTP delivered: ${simulatedOtp}</small>
+              </div>
+            ` : ''}
+
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="form-label">Requested Role</label>
+              <select id="r-role" class="input-field" style="background:#090E17; color:#FFF;">
+                <option value="STAFF">STAFF (Running LP/ALP/Guard)</option>
+                <option value="SUPERVISOR">SUPERVISOR (Lobby Desk)</option>
+                <option value="ROSTER_UPDATER">ROSTER_UPDATER</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+              Submit Registration for Approval
+            </button>
+          </form>
+        `}
       </div>
-    </div>
-  `;
+    `;
 
-  const form = container.querySelector('#login-form');
-  const usernameInput = container.querySelector('#login-username');
-  const passwordInput = container.querySelector('#login-password');
-  const togglePassBtn = container.querySelector('#toggle-password');
-  const errorBox = container.querySelector('#login-error');
-  const submitBtn = container.querySelector('#btn-submit-login');
+    // Tab bindings
+    content.querySelector('#tab-login')?.addEventListener('click', () => { isRegisterTab = false; render(); });
+    content.querySelector('#tab-register')?.addEventListener('click', () => { isRegisterTab = true; render(); });
 
-  togglePassBtn.addEventListener('click', () => {
-    const isPass = passwordInput.type === 'password';
-    passwordInput.type = isPass ? 'text' : 'password';
-  });
+    // Login submit
+    content.querySelector('#form-login')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const crewId = content.querySelector('#l-crew-id').value.trim();
+      const password = content.querySelector('#l-password').value.trim();
 
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const user = usernameInput.value.trim();
-    const pass = passwordInput.value.trim();
+      const res = await store.login({ crewId, password });
+      if (res.success) {
+        showToast(`Welcome ${res.user.name || crewId}!`);
+        window.location.hash = '#/dashboard';
+      } else if (res.pending) {
+        alert(res.error);
+      } else {
+        alert(res.error || 'Authentication failed. Please verify credentials.');
+      }
+    });
 
-    if (!user) {
-      errorBox.textContent = 'Please enter your Username or Crew ID';
-      errorBox.style.display = 'block';
-      return;
-    }
-    if (!pass) {
-      errorBox.textContent = 'Please enter your Password';
-      errorBox.style.display = 'block';
-      return;
-    }
+    // Register auto-fetch
+    const rCrewId = content.querySelector('#r-crew-id');
+    const rName = content.querySelector('#r-name');
+    const badge = content.querySelector('#r-match-badge');
 
-    errorBox.style.display = 'none';
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = `<span>Signing In...</span>`;
+    rCrewId?.addEventListener('input', () => {
+      const q = rCrewId.value.trim();
+      const match = store.findCrewByIdOrName(q);
+      if (match) {
+        badge.textContent = `✓ Found in Master: ${match.name} (${match.designation})`;
+        if (!rName.value) rName.value = match.name;
+      } else {
+        badge.textContent = '';
+      }
+    });
 
-    setTimeout(() => {
-      store.login(user);
-      showToast(`Welcome, ${user.toUpperCase()}`);
-      window.location.hash = '#/menu';
-    }, 400);
-  });
+    content.querySelector('#btn-send-otp')?.addEventListener('click', () => {
+      const mob = content.querySelector('#r-mobile').value.trim();
+      if (!mob || mob.length < 10) {
+        alert('Please enter a valid 10-digit mobile number first.');
+        return;
+      }
+      otpSent = true;
+      showToast(`Verification code sent to ${mob}`);
+      render();
+    });
 
+    // Register submit
+    content.querySelector('#form-register')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const crewId = rCrewId.value.trim().toUpperCase();
+      const name = rName.value.trim();
+      const mobile = content.querySelector('#r-mobile').value.trim();
+      const role = content.querySelector('#r-role').value;
+
+      await store.register({ crewId, name, mobile, role });
+      alert(`Registration submitted for ${crewId} (${name}). Status is PENDING. The Chief Crew Controller (CCC) Kharsia must review and approve your profile before login.`);
+      isRegisterTab = false;
+      render();
+    });
+  }
+
+  render();
+  container.appendChild(content);
   return container;
 }
