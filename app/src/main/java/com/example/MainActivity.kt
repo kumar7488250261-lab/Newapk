@@ -36,11 +36,11 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val context = LocalContext.current
-                    val authManager = remember { AuthManager.getInstance(context) }
-                    val inChargeAuthManager = remember { InChargeAuthManager.getInstance(context) }
-                    val staffRepository = remember { StaffRepository.getInstance(context) }
-                    val jeepRepository = remember { JeepRepository.getInstance(context) }
-                    val lrRepository = remember { LrDeclarationRepository.getInstance(context) }
+                    val authManager = remember { AuthManager(context) }
+                    val inChargeAuthManager = remember { InChargeAuthManager(context) }
+                    val staffRepository = remember { StaffRepository(context) }
+                    val jeepRepository = remember { JeepRepository(context) }
+                    val lrRepository = remember { LrDeclarationRepository(context) }
 
                     var currentScreen by remember { mutableStateOf<Screen>(Screen.Splash) }
                     var currentUserId by remember { mutableStateOf(authManager.currentUserId ?: "GUEST") }
