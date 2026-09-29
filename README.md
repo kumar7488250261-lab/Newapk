@@ -132,3 +132,6 @@ GitHub requires Pages to be enabled once manually in your repository settings:
 - **Lobby In-Charge PIN:** Access to administrative actions (PR status review, Roaster editing, Store log oversight, Long Hour relief confirmation) is secured with a 4-digit In-Charge PIN.
   - **Default PIN:** `1234`
 - **Data Privacy:** Local storage is sandboxed within the browser (`localStorage`). No private API keys or personal credentials are exposed in client-side code.
+
+<!-- Build Sync: 2026-09-29 -->
+
