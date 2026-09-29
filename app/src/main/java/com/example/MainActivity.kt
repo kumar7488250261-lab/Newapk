@@ -9,18 +9,22 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import com.example.ui.screens.HomeScreen
-import com.example.ui.screens.LobbyDetailScreen
-import com.example.ui.screens.RunningRoomScreen
-import com.example.ui.screens.StaffDirectoryScreen
+import androidx.compose.ui.platform.LocalContext
+import com.example.data.AuthManager
+import com.example.data.StaffRepository
+import com.example.data.equipment.InChargeAuthManager
+import com.example.data.jeep.JeepRepository
+import com.example.data.lr.LrDeclarationRepository
+import com.example.ui.screens.*
+import com.example.ui.screens.equipment.StoreRegisterScreen
+import com.example.ui.screens.jeep.JeepSubMenuScreen
+import com.example.ui.screens.longhour.LongHourUpdateScreen
+import com.example.ui.screens.lr.LrDeclarationScreen
+import com.example.ui.screens.pr.PeriodicalRestScreen
+import com.example.ui.screens.roster.RosterAdminPortalScreen
+import com.example.ui.screens.roster.RosterTlcSubMenuScreen
+import com.example.ui.screens.roster.ShiftWiseRosterScreen
 import com.example.ui.theme.KharsiaLobbyTheme
-
-sealed class Screen {
-    data object Home : Screen()
-    data class Directory(val lobbyCode: String = "ALL") : Screen()
-    data class LobbyDetail(val lobbyCode: String) : Screen()
-    data object RunningRoom : Screen()
-}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,46 +35,212 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
+                    val context = LocalContext.current
+                    val authManager = remember { AuthManager.getInstance(context) }
+                    val inChargeAuthManager = remember { InChargeAuthManager.getInstance(context) }
+                    val staffRepository = remember { StaffRepository.getInstance(context) }
+                    val jeepRepository = remember { JeepRepository.getInstance(context) }
+                    val lrRepository = remember { LrDeclarationRepository.getInstance(context) }
+
+                    var currentScreen by remember { mutableStateOf<Screen>(Screen.Splash) }
+                    var currentUserId by remember { mutableStateOf(authManager.currentUserId ?: "GUEST") }
 
                     when (val screen = currentScreen) {
-                        is Screen.Home -> {
-                            HomeScreen(
-                                onNavigateToDirectory = { lobbyCode ->
-                                    currentScreen = Screen.Directory(lobbyCode)
-                                },
-                                onNavigateToLobbyDetail = { lobbyCode ->
-                                    currentScreen = Screen.LobbyDetail(lobbyCode)
-                                },
-                                onNavigateToRunningRoom = {
-                                    currentScreen = Screen.RunningRoom
+                        is Screen.Splash -> {
+                            SplashScreen(
+                                onTimeout = {
+                                    currentScreen = if (authManager.isLoggedIn) Screen.MainMenu else Screen.Landing
                                 }
                             )
                         }
-                        is Screen.Directory -> {
+                        is Screen.Welcome -> {
+                            WelcomeScreen(
+                                onContinue = {
+                                    currentScreen = Screen.Landing
+                                }
+                            )
+                        }
+                        is Screen.Landing -> {
+                            LobbyLandingScreen(
+                                onNavigateToLogin = {
+                                    currentScreen = Screen.Login
+                                }
+                            )
+                        }
+                        is Screen.Login -> {
                             BackHandler {
-                                currentScreen = Screen.Home
+                                currentScreen = Screen.Landing
+                            }
+                            LoginScreen(
+                                authManager = authManager,
+                                onLoginSuccess = { userId ->
+                                    currentUserId = userId
+                                    currentScreen = Screen.MainMenu
+                                },
+                                onBack = {
+                                    currentScreen = Screen.Landing
+                                }
+                            )
+                        }
+                        is Screen.MainMenu -> {
+                            MainMenuScreen(
+                                currentUserId = currentUserId,
+                                onNavigateToStaffDirectory = {
+                                    currentScreen = Screen.StaffDirectory
+                                },
+                                onNavigateToEquipmentRegister = {
+                                    currentScreen = Screen.EquipmentRegisterHome
+                                },
+                                onNavigateToPeriodicalRest = {
+                                    currentScreen = Screen.PeriodicalRest
+                                },
+                                onNavigateToLongHour = {
+                                    currentScreen = Screen.LongHour
+                                },
+                                onNavigateToJeepSubMenu = {
+                                    currentScreen = Screen.JeepSubMenu
+                                },
+                                onNavigateToRosterTlc = {
+                                    currentScreen = Screen.RosterTlcSubMenu
+                                },
+                                onNavigateToLrDeclaration = {
+                                    currentScreen = Screen.LrDeclaration
+                                },
+                                onLogout = {
+                                    authManager.logout()
+                                    currentUserId = "GUEST"
+                                    currentScreen = Screen.Landing
+                                }
+                            )
+                        }
+                        is Screen.StaffDirectory -> {
+                            BackHandler {
+                                currentScreen = Screen.MainMenu
                             }
                             StaffDirectoryScreen(
-                                initialLobbyCode = screen.lobbyCode,
-                                onBack = { currentScreen = Screen.Home }
+                                staffRepository = staffRepository,
+                                onLobbyClick = { lobby ->
+                                    currentScreen = Screen.LobbyDetail(lobby)
+                                },
+                                onBack = {
+                                    currentScreen = Screen.MainMenu
+                                }
                             )
                         }
                         is Screen.LobbyDetail -> {
                             BackHandler {
-                                currentScreen = Screen.Home
+                                currentScreen = Screen.StaffDirectory
                             }
                             LobbyDetailScreen(
-                                lobbyCode = screen.lobbyCode,
-                                onBack = { currentScreen = Screen.Home }
+                                lobby = screen.lobby,
+                                onBack = {
+                                    currentScreen = Screen.StaffDirectory
+                                }
                             )
                         }
-                        is Screen.RunningRoom -> {
+                        is Screen.EquipmentRegisterHome, is Screen.FastIssue, is Screen.FastReturn, is Screen.SupervisorDashboard -> {
                             BackHandler {
-                                currentScreen = Screen.Home
+                                currentScreen = Screen.MainMenu
                             }
-                            RunningRoomScreen(
-                                onBack = { currentScreen = Screen.Home }
+                            StoreRegisterScreen(
+                                inChargeAuthManager = inChargeAuthManager,
+                                staffRepository = staffRepository,
+                                onBack = {
+                                    currentScreen = Screen.MainMenu
+                                }
+                            )
+                        }
+                        is Screen.PeriodicalRest -> {
+                            BackHandler {
+                                currentScreen = Screen.MainMenu
+                            }
+                            PeriodicalRestScreen(
+                                inChargeAuthManager = inChargeAuthManager,
+                                staffRepository = staffRepository,
+                                onBack = {
+                                    currentScreen = Screen.MainMenu
+                                }
+                            )
+                        }
+                        is Screen.LongHour -> {
+                            BackHandler {
+                                currentScreen = Screen.MainMenu
+                            }
+                            LongHourUpdateScreen(
+                                inChargeAuthManager = inChargeAuthManager,
+                                staffRepository = staffRepository,
+                                onBack = {
+                                    currentScreen = Screen.MainMenu
+                                }
+                            )
+                        }
+                        is Screen.JeepSubMenu, is Screen.JeepAvailability, is Screen.JeepMovementEntry -> {
+                            BackHandler {
+                                currentScreen = Screen.MainMenu
+                            }
+                            val initialTab = when (screen) {
+                                is Screen.JeepAvailability -> 0
+                                is Screen.JeepMovementEntry -> 1
+                                else -> 0
+                            }
+                            JeepSubMenuScreen(
+                                jeepRepository = jeepRepository,
+                                staffRepository = staffRepository,
+                                initialTab = initialTab,
+                                onBack = {
+                                    currentScreen = Screen.MainMenu
+                                }
+                            )
+                        }
+                        is Screen.RosterTlcSubMenu -> {
+                            BackHandler {
+                                currentScreen = Screen.MainMenu
+                            }
+                            RosterTlcSubMenuScreen(
+                                inChargeAuthManager = inChargeAuthManager,
+                                onNavigateToShiftRoster = {
+                                    currentScreen = Screen.ShiftWiseRoster
+                                },
+                                onNavigateToAdminPortal = {
+                                    currentScreen = Screen.RosterAdminPortal
+                                },
+                                onBack = {
+                                    currentScreen = Screen.MainMenu
+                                }
+                            )
+                        }
+                        is Screen.ShiftWiseRoster -> {
+                            BackHandler {
+                                currentScreen = Screen.RosterTlcSubMenu
+                            }
+                            ShiftWiseRosterScreen(
+                                onBack = {
+                                    currentScreen = Screen.RosterTlcSubMenu
+                                }
+                            )
+                        }
+                        is Screen.RosterAdminPortal -> {
+                            BackHandler {
+                                currentScreen = Screen.RosterTlcSubMenu
+                            }
+                            RosterAdminPortalScreen(
+                                staffRepository = staffRepository,
+                                onBack = {
+                                    currentScreen = Screen.RosterTlcSubMenu
+                                }
+                            )
+                        }
+                        is Screen.LrDeclaration -> {
+                            BackHandler {
+                                currentScreen = Screen.MainMenu
+                            }
+                            LrDeclarationScreen(
+                                lrRepository = lrRepository,
+                                staffRepository = staffRepository,
+                                currentUserId = currentUserId,
+                                onBack = {
+                                    currentScreen = Screen.MainMenu
+                                }
                             )
                         }
                     }

@@ -265,53 +265,54 @@ fun StaffDirectoryScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // SEARCH BAR
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 8.dp)
-            ) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = {
-                        val placeholder = when (selectedTab) {
-                            0 -> "Search Kharsia Staff (Name, ID e.g. KHS1001, Driver, Mobile)..."
-                            1 -> "Search Other Lobbies (BSP, RIG, KRBA, SDL)..."
-                            2 -> "Search TLC Controller by Name or Mobile..."
-                            3 -> "Search Station Code (KHS, RIG, BSP) or Name..."
-                            else -> "Search Officers, TPC, DPC, Test Room..."
-                        }
-                        Text(placeholder, color = Color(0xFF7E8EA6), fontSize = 12.5.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null,
-                            tint = RailwayGold
-                        )
-                    },
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { searchQuery = "" }) {
-                                Icon(Icons.Default.Clear, contentDescription = "Clear", tint = Color.Gray)
-                            }
-                        }
-                    },
+            // SEARCH BAR (Displayed for Kharsia, TLC, Stations, and Divisional Control; Other Lobbies has dedicated lobby & category search)
+            if (selectedTab != 1) {
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag("input_search_directory"),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedBorderColor = RailwayGold,
-                        unfocusedBorderColor = DarkBorderBlue,
-                        focusedContainerColor = DarkSurfaceNavy,
-                        unfocusedContainerColor = DarkSurfaceNavy
+                        .padding(horizontal = 14.dp, vertical = 8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = {
+                            val placeholder = when (selectedTab) {
+                                0 -> "Search Kharsia Staff (Name, ID e.g. KHS1001, Driver, Mobile)..."
+                                2 -> "Search TLC Controller by Name or Mobile..."
+                                3 -> "Search Station Code (KHS, RIG, BSP) or Name..."
+                                else -> "Search Officers, TPC, DPC, Test Room..."
+                            }
+                            Text(placeholder, color = Color(0xFF7E8EA6), fontSize = 12.5.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = null,
+                                tint = RailwayGold
+                            )
+                        },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(Icons.Default.Clear, contentDescription = "Clear", tint = Color.Gray)
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("input_search_directory"),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = RailwayGold,
+                            unfocusedBorderColor = DarkBorderBlue,
+                            focusedContainerColor = DarkSurfaceNavy,
+                            unfocusedContainerColor = DarkSurfaceNavy
+                        )
                     )
-                )
+                }
             }
 
             // MAIN NAVIGATION TABS
@@ -806,23 +807,27 @@ private fun OtherLobbiesTabView(
         selectedCategory = "ALL"
     }
 
-    val effectiveQuery = (localSearchQuery.ifBlank { searchQuery }).trim().uppercase()
+    val effectiveQuery = localSearchQuery.trim().uppercase()
 
     // Filter crew strictly by selected Lobby, selected Category, and Search Query by Name
     val filteredCrew = remember(allCrew, selectedLobbyCode, selectedCategory, effectiveQuery) {
         allCrew.filter { item ->
             val matchesLobby = if (selectedLobbyCode == "ALL") true else item.lobbyCode.equals(selectedLobbyCode, ignoreCase = true)
-            val matchesCategory = when (selectedCategory) {
-                "ALL" -> true
-                "Loco Pilots (Goods)" -> item.category.contains("Goods", ignoreCase = true) && !item.category.contains("ALP", ignoreCase = true) && !item.category.contains("Assistant", ignoreCase = true)
-                "Assistant Loco Pilots (ALP)" -> item.category.contains("ALP", ignoreCase = true) || item.category.contains("Assistant", ignoreCase = true)
-                "Train Managers (Guards)" -> item.category.contains("Guard", ignoreCase = true) || item.category.contains("Manager", ignoreCase = true) || item.category.contains("TM", ignoreCase = true)
-                "Shunting Staff" -> item.category.contains("Shunting", ignoreCase = true)
-                "Loco Pilots (Passenger)" -> item.category.contains("Passenger", ignoreCase = true)
-                "Chief Loco Inspectors (CLI)" -> item.category.contains("CLI", ignoreCase = true)
-                "Crew Controllers (CC)" -> item.category.contains("Crew Controller", ignoreCase = true)
-                "Chief Crew Controllers (CCC)" -> item.category.contains("CCC", ignoreCase = true) || item.category.contains("Controlling", ignoreCase = true)
-                "Office & Misc Staff" -> item.category.contains("Office", ignoreCase = true) || item.category.contains("Miscellaneous", ignoreCase = true)
+            val matchesCategory = when {
+                selectedCategory == "ALL" -> true
+                selectedCategory.equals(item.category, ignoreCase = true) -> true
+                selectedCategory.contains("Goods", ignoreCase = true) && item.category.contains("Goods", ignoreCase = true) && !item.category.contains("ALP", ignoreCase = true) && !item.category.contains("Assistant", ignoreCase = true) -> true
+                (selectedCategory.contains("ALP", ignoreCase = true) || selectedCategory.contains("Assistant", ignoreCase = true)) &&
+                    (item.category.contains("ALP", ignoreCase = true) || item.category.contains("Assistant", ignoreCase = true)) -> true
+                (selectedCategory.contains("Guard", ignoreCase = true) || selectedCategory.contains("Manager", ignoreCase = true) || selectedCategory.contains("TM", ignoreCase = true)) &&
+                    (item.category.contains("Guard", ignoreCase = true) || item.category.contains("Manager", ignoreCase = true) || item.category.contains("TM", ignoreCase = true)) -> true
+                selectedCategory.contains("Passenger", ignoreCase = true) && item.category.contains("Passenger", ignoreCase = true) -> true
+                selectedCategory.contains("Shunting", ignoreCase = true) && item.category.contains("Shunting", ignoreCase = true) -> true
+                selectedCategory.contains("CLI", ignoreCase = true) && item.category.contains("CLI", ignoreCase = true) -> true
+                selectedCategory.contains("Crew Controller", ignoreCase = true) && item.category.contains("Crew Controller", ignoreCase = true) -> true
+                (selectedCategory.contains("CCC", ignoreCase = true) || selectedCategory.contains("Controlling", ignoreCase = true)) &&
+                    (item.category.contains("CCC", ignoreCase = true) || item.category.contains("Controlling", ignoreCase = true)) -> true
+                selectedCategory.contains("Office", ignoreCase = true) && (item.category.contains("Office", ignoreCase = true) || item.category.contains("Miscellaneous", ignoreCase = true)) -> true
                 else -> item.category.equals(selectedCategory, ignoreCase = true)
             }
             val matchesSearch = if (effectiveQuery.isBlank()) true else {
@@ -893,6 +898,21 @@ private fun OtherLobbiesTabView(
 
             items(otherLobbies, key = { it.code }) { lobby ->
                 val isSelected = selectedLobbyCode == lobby.code
+                val shortName = when (lobby.code) {
+                    "BSP" -> "Bilaspur (BSP)"
+                    "RIG" -> "Raigarh (RIG)"
+                    "KRBA" -> "Korba (KRBA)"
+                    "SDL" -> "Shahdol (SDL)"
+                    "BRJN" -> "Brajrajnagar (BRJN)"
+                    "BYT" -> "Bhatapara (BYT)"
+                    "BJRI" -> "Bijuri (BJRI)"
+                    "DBEC" -> "DBEC (Durg)"
+                    "AKT" -> "Akaltara (AKT)"
+                    "USL" -> "Uslapur (USL)"
+                    "PND" -> "Pendra Rd (PND)"
+                    "SJQ" -> "Surajpur (SJQ)"
+                    else -> "${lobby.name} (${lobby.code})"
+                }
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
@@ -902,7 +922,7 @@ private fun OtherLobbiesTabView(
                         .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     Text(
-                        text = "${lobby.code} (${lobby.totalContacts})",
+                        text = "$shortName (${lobby.totalContacts})",
                         color = if (isSelected) Color(0xFF0F1E36) else Color.White,
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.Bold
@@ -934,6 +954,7 @@ private fun OtherLobbiesTabView(
                     "Chief Loco Inspectors (CLI)" -> "CLI"
                     "Crew Controllers (CC)" -> "CC"
                     "Chief Crew Controllers (CCC)" -> "CCC"
+                    "Crew Controlling Centre (CCC)" -> "CCC"
                     "Office & Misc Staff" -> "Office Staff"
                     else -> catName
                 }
@@ -956,15 +977,27 @@ private fun OtherLobbiesTabView(
         }
 
         // 2b. DEDICATED IN-LOBBY & CATEGORY SEARCH BAR
+        val categoryLabel = when (selectedCategory) {
+            "ALL" -> "All Categories"
+            "Loco Pilots (Goods)" -> "Loco Pilot (LP)"
+            "Assistant Loco Pilots (ALP)" -> "ALP"
+            "Train Managers (Guards)" -> "Train Manager (Guard)"
+            "Loco Pilots (Passenger)" -> "Passenger LP"
+            "Shunting Staff" -> "Shunting"
+            "Chief Loco Inspectors (CLI)" -> "CLI"
+            "Chief Crew Controllers (CCC)", "Crew Controlling Centre (CCC)" -> "CCC"
+            else -> selectedCategory
+        }
+
         val searchPlaceholder = when {
             selectedLobby != null && selectedCategory != "ALL" ->
-                "Search in ${selectedLobby.code} ($selectedCategory) by Name..."
+                "Search in ${selectedLobby.code} - $categoryLabel by Name..."
             selectedLobby != null ->
-                "Search in ${selectedLobby.name} by Name or Phone..."
+                "Search in ${selectedLobby.name} by Name or Mobile..."
             selectedCategory != "ALL" ->
-                "Search in $selectedCategory by Name..."
+                "Search in $categoryLabel across Lobbies by Name..."
             else ->
-                "Search by Name, Designation, Phone in Other Lobbies..."
+                "Search Crew by Name, Designation, or Mobile in Other Lobbies..."
         }
 
         OutlinedTextField(
@@ -1014,6 +1047,42 @@ private fun OtherLobbiesTabView(
                 unfocusedContainerColor = DarkSurfaceNavy
             )
         )
+
+        // Search scope status line
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = if (localSearchQuery.isNotBlank()) {
+                    "Found ${filteredCrew.size} matches in ${selectedLobby?.code ?: "All Lobbies"} ($categoryLabel)"
+                } else if (selectedLobby != null) {
+                    "Searching in ${selectedLobby.name} (${selectedLobby.code}) • $categoryLabel"
+                } else {
+                    "All Division Lobbies (${allCrew.size} Crew) • $categoryLabel"
+                },
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = if (localSearchQuery.isNotBlank()) RailwayGold else Color(0xFF93C5FD),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+            if (localSearchQuery.isNotBlank()) {
+                Text(
+                    text = "Clear Search",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFCA5A5),
+                    modifier = Modifier
+                        .clickable { localSearchQuery = "" }
+                        .padding(start = 8.dp)
+                )
+            }
+        }
 
         // 3. SELECTED LOBBY HEADER CARD (if a specific lobby is chosen)
         if (selectedLobby != null) {
@@ -1140,17 +1209,27 @@ private fun OtherLobbiesTabView(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "No crew found matching filter or search query.",
+                        text = if (localSearchQuery.isNotBlank())
+                            "No staff found named \"$localSearchQuery\" in ${selectedLobby?.code ?: "All Lobbies"} ($categoryLabel)"
+                        else
+                            "No crew found in this category.",
                         color = Color(0xFFA0B4D0),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium
+                        fontSize = 13.5.sp,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "Try clearing search or switching category / lobby.",
-                        color = Color(0xFF64748B),
-                        fontSize = 11.5.sp
-                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    if (localSearchQuery.isNotBlank()) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(RailwayGold)
+                                .clickable { localSearchQuery = "" }
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Text("Clear Search", color = Color(0xFF0F1E36), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+                    }
                 }
             }
         } else {
